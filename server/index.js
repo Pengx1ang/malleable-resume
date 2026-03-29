@@ -668,10 +668,16 @@ app.post('/api/rewrite-simple', async (req, res) => {
     }
 });
 
+// 健康检查端点
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // 启动服务器
 app.listen(PORT, () => {
     console.log(`🚀 AI Resume Server running on http://localhost:${PORT}`);
     console.log(`📝 Available endpoints:`);
+    console.log(`   GET  /health            - 健康检查`);
     console.log(`   POST /api/rewrite       - JD 驱动改写（2x3 矩阵）`);
     console.log(`   POST /api/rewrite-simple - 区域智能改写（单段文字）`);
     console.log(`   POST /api/parse         - 简历解析（单文件）`);
