@@ -61,11 +61,17 @@ async function extractTextFromFile(filePath, originalName) {
     let text = '';
     let isImagePdf = false;
 
+    console.log('[extractTextFromFile] 文件路径:', filePath, '扩展名:', ext);
+
     try {
         if (ext === '.pdf') {
+            console.log('[extractTextFromFile] 开始读取 PDF...');
             const dataBuffer = fs.readFileSync(filePath);
+            console.log('[extractTextFromFile] PDF 大小:', dataBuffer.length, 'bytes');
             const data = await pdfParse(dataBuffer);
-            text = data.text;
+            console.log('[extractTextFromFile] PDF 解析结果:', data ? '有数据' : '无数据');
+            text = data.text || '';
+            console.log('[extractTextFromFile] 提取的文字长度:', text.length);
 
             // 如果文字太少（少于 100 字符），标记为图片型 PDF
             // 前端会收到提示并建议用户上传文字版或使用前端 OCR
@@ -148,18 +154,21 @@ app.post('/api/rewrite', async (req, res) => {
 // 2. 简历文件解析 + 智能重写
 app.post('/api/parse', upload.single('file'), async (req, res) => {
     try {
+        console.log('[/api/parse] req.file:', req.file);
+        console.log('[/api/parse] req.body:', req.body);
+
         if (!req.file) {
             return res.status(400).json({ error: '未上传文件' });
         }
 
         const startTime = Date.now();
-        console.log(`\n[解析开始] 文件：${req.file.originalname}`);
+        console.log(`\n[解析开始] 文件：${req.file.originalname}, 大小：${req.file.size} bytes`);
 
         // 提取文字
         console.log('[步骤 1/3] 提取文字...');
         const extractResult = await extractTextFromFile(req.file.path, req.file.originalname);
-        const rawText = extractResult.text;
-        const isImagePdf = extractResult.isImagePdf;
+        const rawText = extractResult.text || '';
+        const isImagePdf = extractResult.isImagePdf || false;
 
         console.log(`[步骤 1 完成] 提取了 ${rawText.length} 字符，isImagePdf: ${isImagePdf}，耗时 ${Date.now() - startTime}ms`);
 
