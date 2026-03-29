@@ -1,0 +1,40 @@
+# 依赖
+node_modules/
+uploads/
+
+# 环境配置（包含 API Key，不要上传！）
+server/.env
+.env
+
+# 临时文件
+*.log
+.DS_Store
+Thumbs.db
+
+# 测试文件
+test -resume/
+
+# Claude 配置
+.claude/
+
+# OCR 数据文件（体积大，不需要）
+server/*.traineddata
+
+# 大型测试文件
+*.pdf
+test(1).html
+test2.html
+test2_fixed.html
+
+# PPT 文件
+ppt-slides/
+
+# 项目文档（可选）
+DESIGN_DECISIONS.md
+ISSUES_*.md
+PROJECT_STATUS.md
+SESSION_*.md
+STYLE_EDIT_README.md
+
+# 子目录（避免重复）
+可生成式简历/

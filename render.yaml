@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: malleable-resume-server
+    env: node
+    buildCommand: cd server && npm install
+    startCommand: cd server && node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: API_KEY
+        sync: false
+      - key: API_URL
+        sync: false
+      - key: API_MODEL
+        value: qwen-plus
+      - key: CORS_ORIGIN
+        value: "*"
