@@ -1298,9 +1298,9 @@
                 </div>
             </div>
 
-            <!-- 字号字重 -->
+            <!-- 文字编辑 -->
             <div class="style-panel-section">
-                <div class="style-panel-title">字号 · 字重</div>
+                <div class="style-panel-title">文字编辑</div>
                 <div class="style-control-row">
                     <span class="style-control-label">字号</span>
                     <input type="number" class="style-control-input small" id="style-font-size" value="14" min="10" max="24">
@@ -1313,6 +1313,16 @@
                         <option value="600">半粗</option>
                         <option value="700">加粗</option>
                     </select>
+                </div>
+                <div class="style-control-row">
+                    <span class="style-control-label">字体颜色</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="position: relative; width: 32px; height: 32px; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0;">
+                            <input type="color" id="style-font-color" class="absolute opacity-0 w-full h-full cursor-pointer" value="#1f2937">
+                            <div id="style-font-color-preview" style="position: absolute; inset: 0; background: #1f2937; pointer-events: none;"></div>
+                        </div>
+                        <input type="text" id="style-font-color-text" class="style-control-input small" value="#1f2937" style="width: 80px; font-family: monospace;" placeholder="#1f2937">
+                    </div>
                 </div>
             </div>
 
@@ -4001,6 +4011,9 @@
                     version.updatedAt = new Date().toISOString();
                     resumeLibraryStore.persist();
                     console.log('[JD 保存] 已保存到岗位版本:', version.id);
+
+                    // 重新渲染左侧列表，同步显示更新后的标题
+                    renderHistoryList();
                 }
             }
             // 否则保存到母版简历的临时 JD 缓存（可选功能）
@@ -5215,6 +5228,7 @@
             fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif",
             fontSize: 14,
             fontWeight: 400,
+            fontColor: '#1f2937',
             lineHeight: 1.6,
             letterSpacing: 0,
             textAlign: 'left',
@@ -5515,6 +5529,14 @@
             document.getElementById('style-letter-spacing').value = currentStyleConfig.letterSpacing;
             document.getElementById('style-divider-style').value = currentStyleConfig.dividerStyle;
 
+            // 字体颜色
+            const fontColorPreview = document.getElementById('style-font-color-preview');
+            const fontColorText = document.getElementById('style-font-color-text');
+            const fontColorPicker = document.getElementById('style-font-color');
+            if (fontColorPreview) fontColorPreview.style.background = currentStyleConfig.fontColor;
+            if (fontColorText) fontColorText.value = currentStyleConfig.fontColor;
+            if (fontColorPicker) fontColorPicker.value = currentStyleConfig.fontColor;
+
             // 颜色选择器
             document.querySelectorAll('.color-swatch').forEach(swatch => {
                 swatch.classList.remove('selected');
@@ -5586,6 +5608,41 @@
                 currentStyleConfig.fontWeight = weight;
                 hasUnsavedStyleChanges = true;
             });
+
+            // 字体颜色选择 - 支持选中文字和全局修改
+            const fontColorPicker = document.getElementById('style-font-color');
+            const fontColorText = document.getElementById('style-font-color-text');
+            const fontColorPreview = document.getElementById('style-font-color-preview');
+
+            function updateFontColor(color) {
+                // 应用到选中文字或当前聚焦块
+                const blocks = currentSelectedBlocks.length > 0 ? currentSelectedBlocks :
+                              (currentFocusedBlock ? [currentFocusedBlock] : []);
+                blocks.forEach(block => {
+                    block.style.color = color;
+                });
+                // 同时更新全局配置
+                currentStyleConfig.fontColor = color;
+                hasUnsavedStyleChanges = true;
+                // 更新 UI
+                if (fontColorPreview) fontColorPreview.style.background = color;
+                if (fontColorText) fontColorText.value = color;
+                if (fontColorPicker) fontColorPicker.value = color;
+            }
+
+            if (fontColorPicker) {
+                fontColorPicker.addEventListener('input', (e) => {
+                    updateFontColor(e.target.value);
+                });
+            }
+            if (fontColorText) {
+                fontColorText.addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                        updateFontColor(color);
+                    }
+                });
+            }
 
             // 行高选择
             document.getElementById('style-line-height').addEventListener('change', (e) => {
