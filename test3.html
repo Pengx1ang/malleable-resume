@@ -174,7 +174,9 @@
         }
 
         /* --- 1. 刚性保护：侧边栏与面板布局 - 增强对比度 --- */
+        /* 页面加载渐入动画 */
         #left-sidebar {
+            animation: fadeInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             width: 260px;
             flex-shrink: 0;
@@ -184,8 +186,17 @@
             background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
             box-shadow: 2px 0 8px rgba(0,0,0,0.06);
         }
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
         #left-sidebar.collapsed { width: 68px; }
         #jd-panel {
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             width: 280px;
             flex-shrink: 0;
@@ -195,6 +206,7 @@
             box-shadow: 2px 0 8px rgba(0,0,0,0.06);
         }
         #right-panel {
+            animation: fadeInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             width: 300px;
             flex-shrink: 0;
@@ -457,6 +469,7 @@
                 0 12px 32px rgba(0,0,0,0.12),
                 0 0 0 1px rgba(0,0,0,0.08);
             padding: 50px 60px; position: relative; transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top center;
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
         }
         .a4-paper:hover {
             box-shadow:
@@ -674,14 +687,48 @@
             position: absolute;
             inset: -2px;
             border-radius: 8px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), transparent);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(147, 51, 234, 0.1), transparent);
             opacity: 0;
             animation: ai-pulse 3s ease-in-out infinite;
             pointer-events: none;
         }
+        /* AI 高亮框光晕流动效果 */
+        .ai-highlight {
+            position: relative;
+            overflow: visible;
+        }
+        .ai-highlight::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 8px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(168, 85, 247, 0.2) 25%,
+                rgba(147, 51, 234, 0.3) 50%,
+                rgba(168, 85, 247, 0.2) 75%,
+                transparent 100%);
+            background-size: 200% 100%;
+            animation: ai-glow-flow 4s linear infinite;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .ai-highlight:hover::after {
+            opacity: 1;
+        }
+        @keyframes ai-glow-flow {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
         @keyframes ai-pulse {
             0%, 100% { opacity: 0; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.02); }
+            50% { opacity: 0.4; transform: scale(1.02); }
+        }
+        /* 页面加载渐入动画 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
