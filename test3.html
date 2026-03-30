@@ -595,11 +595,13 @@
         /* 样式编辑模式下隐藏 AI 高光特效（只保留文字内容） */
         body.style-edit-mode .ai-highlight {
             background-color: transparent !important;
-            color: inherit !important;
-            font-weight: inherit !important;
             padding: 0 !important;
             border: none !important;
             box-shadow: none !important;
+        }
+        /* 确保样式编辑模式下文字可见 - 保留默认紫色 */
+        body.style-edit-mode .ai-highlight span {
+            color: #6b21a8 !important;
         }
         body.style-edit-mode .ai-highlight .undo-btn,
         body.style-edit-mode .ai-highlight::after,
@@ -613,17 +615,19 @@
         body.preview-mode #target-bullet-container,
         body.preview-mode .dragging-source,
         body.preview-mode .dragging-placeholder,
-        body.preview-mode .dragging-active,
-        body.preview-mode .ai-highlight {
+        body.preview-mode .dragging-active {
             display: none !important;
         }
+        /* 预览模式下隐藏 AI 高光框，但保留文字可见 */
         body.preview-mode .ai-highlight {
             background-color: transparent !important;
-            color: inherit !important;
-            font-weight: inherit !important;
             padding: 0 !important;
             border: none !important;
             box-shadow: none !important;
+        }
+        /* 确保预览模式下文字可见 - 保留默认紫色 */
+        body.preview-mode .ai-highlight span {
+            color: #6b21a8 !important;
         }
         body.preview-mode .ai-highlight .undo-btn,
         body.preview-mode .ai-highlight::after,
@@ -867,6 +871,134 @@
         .modal-btn.danger:hover {
             background: #fef2f2;
         }
+
+        /* ═══════════════════════════════════════════════════════════
+           🎨 Theme Engine — 三主题切换系统
+           Claude（默认）/ Retro Mac（复古像素）/ 梦幻盲盒（手绘马卡龙）
+           ═══════════════════════════════════════════════════════════ */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap');
+
+        /* CSS Variable Anchors */
+        :root { --t-shell:#f1f5f9; --t-panel:#fff; --t-border:#e2e8f0; --t-text1:#1e293b; --t-text2:#64748b; --t-accent:#8b5cf6; --t-accent-s:#ede9fe; --t-btn:#1e293b; --t-btn-t:#fff; --t-r:12px; --t-shadow:0 1px 3px rgba(0,0,0,.04); }
+        [data-theme="retro-mac"] { --t-shell:#dfdfdf; --t-panel:#fff; --t-border:#000; --t-text1:#000; --t-text2:#000; --t-accent:#000; --t-accent-s:#fff; --t-btn:#fff; --t-btn-t:#000; --t-r:6px; --t-shadow:3px 3px 0 #000; }
+        [data-theme="sanrio-claw"] { --t-shell:#FDF2F6; --t-panel:#ffffff; --t-border:#F25599; --t-text1:#232021; --t-text2:#72525B; --t-accent:#72525B; --t-accent-s:#F5EAEF; --t-btn:#F25599; --t-btn-t:#fff; --t-r:16px 8px 16px 8px/8px 16px 8px 16px; }
+
+        /* Smooth transitions */
+        [data-theme] #left-sidebar, [data-theme] #jd-panel, [data-theme] #right-panel,
+        [data-theme] #canvas-container, [data-theme] .a4-paper,
+        [data-theme] .style-edit-header, [data-theme] .layer-tree-panel, [data-theme] .style-properties-panel {
+            transition: background-color .4s, box-shadow .4s, border-radius .4s, border-color .4s;
+        }
+
+        /* Shell background */
+        [data-theme]#main-body { background-color: var(--t-panel) !important; }
+        [data-theme] #canvas-container { background-color: var(--t-shell) !important; }
+        [data-theme="retro-mac"] #canvas-container {
+            background-image: linear-gradient(45deg, #d4d4d4 25%, transparent 25%, transparent 75%, #d4d4d4 75%, #d4d4d4), linear-gradient(45deg, #d4d4d4 25%, transparent 25%, transparent 75%, #d4d4d4 75%, #d4d4d4) !important;
+            background-size: 4px 4px !important; background-position: 0 0, 2px 2px !important;
+        }
+        [data-theme="sanrio-claw"] #canvas-container {
+            background-image: linear-gradient(rgba(242, 85, 153, 0.12) 2px, transparent 2px), linear-gradient(90deg, rgba(242, 85, 153, 0.12) 2px, transparent 2px) !important;
+            background-size: 36px 36px !important;
+        }
+
+        /* Fonts */
+        [data-theme="retro-mac"] #left-sidebar, [data-theme="retro-mac"] #jd-panel, [data-theme="retro-mac"] #right-panel, [data-theme="retro-mac"] .style-edit-header {
+            font-family: "Chicago", "Geneva", sans-serif !important; font-smoothing: none; -webkit-font-smoothing: none;
+        }
+        [data-theme="sanrio-claw"] #left-sidebar, [data-theme="sanrio-claw"] #jd-panel, [data-theme="sanrio-claw"] #right-panel, [data-theme="sanrio-claw"] .style-edit-header {
+            font-family: 'Nunito', sans-serif !important; letter-spacing: 0.3px;
+        }
+
+        /* A4 paper stays professional */
+        [data-theme="retro-mac"] .a4-paper, [data-theme="sanrio-claw"] .a4-paper {
+            border: none !important; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif !important;
+            position: relative; z-index: 10;
+        }
+        [data-theme="retro-mac"] .a4-paper { border-radius: 2px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.02), 0 12px 40px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04) !important; }
+        [data-theme="sanrio-claw"] .a4-paper { border-radius: 4px !important; box-shadow: 0 20px 50px rgba(35, 32, 33, 0.08), 0 0 0 1px rgba(242, 85, 153, 0.15) !important; }
+
+        /* AI Highlight per theme */
+        [data-theme="retro-mac"] .ai-highlight { background-color: transparent !important; border: none !important; border-bottom: 2px dotted #000 !important; color: inherit !important; border-radius: 0 !important; }
+        [data-theme="retro-mac"] .ai-highlight:hover { background-color: #f8f8f8 !important; }
+        [data-theme="sanrio-claw"] .ai-highlight { background-color: #fff !important; border: 2px dashed #72525B !important; color: #F25599 !important; border-radius: 6px !important; box-shadow: 0 0 8px rgba(114, 82, 91, 0.15) !important; }
+        [data-theme="sanrio-claw"] .ai-highlight:hover { background-color: #F5EAEF !important; }
+
+        /* Sanrio claw machine style */
+        [data-theme="sanrio-claw"] #left-sidebar, [data-theme="sanrio-claw"] #jd-panel, [data-theme="sanrio-claw"] #right-panel, [data-theme="sanrio-claw"] .layer-tree-panel, [data-theme="sanrio-claw"] .style-edit-header {
+            border-color: #F25599 !important; border-width: 3px !important; border-style: solid !important; background-color: #ffffff !important;
+        }
+        [data-theme="sanrio-claw"] .jd-card-item, [data-theme="sanrio-claw"] #jd-drag-source, [data-theme="sanrio-claw"] .template-card, [data-theme="sanrio-claw"] .history-item {
+            border: 3px solid #F25599 !important; border-radius: var(--t-r) !important; background: #fff !important;
+            box-shadow: 4px 5px 0px #F9B3D1 !important; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        [data-theme="sanrio-claw"] .jd-card-item:hover, [data-theme="sanrio-claw"] #jd-drag-source:hover {
+            transform: translate(-2px, -2px) rotate(1deg) !important; box-shadow: 6px 8px 0px #F68DB9 !important;
+        }
+        [data-theme="sanrio-claw"] #chat-messages > div { border: 3px solid #F25599 !important; border-radius: 12px 16px 12px 16px/16px 12px 16px 12px !important; box-shadow: 3px 4px 0px #F9B3D1 !important; background: #fff !important; }
+        [data-theme="sanrio-claw"] #chat-messages > div.bg-indigo-600 { background: #F25599 !important; color: #fff !important; box-shadow: 3px 4px 0px #F68DB9 !important; }
+
+        /* Buttons */
+        [data-theme="sanrio-claw"] #btn-toggle-preview, [data-theme="sanrio-claw"] #btn-new-resume, [data-theme="sanrio-claw"] #btn-add-jd {
+            border: 3px solid #F25599 !important; background: #fff !important; color: #F25599 !important; border-radius: var(--t-r) !important;
+            box-shadow: 3px 4px 0px #F9B3D1 !important; font-weight: 800 !important;
+        }
+        [data-theme="sanrio-claw"] #btn-toggle-preview:active, [data-theme="sanrio-claw"] #btn-new-resume:active, [data-theme="sanrio-claw"] #btn-add-jd:active {
+            transform: translate(3px, 4px) !important; box-shadow: 0 0 0 transparent !important;
+        }
+        [data-theme="retro-mac"] #left-sidebar, [data-theme="retro-mac"] #jd-panel, [data-theme="retro-mac"] #right-panel { border-color: #000 !important; border-width: 2px !important; border-style: solid !important; background: #fff !important; }
+        [data-theme="retro-mac"] #btn-toggle-preview, [data-theme="retro-mac"] #btn-new-resume, [data-theme="retro-mac"] #btn-add-jd, [data-theme="retro-mac"] .style-edit-btn {
+            border: 2px solid #000 !important; box-shadow: 3px 3px 0 #000 !important; font-weight: 900 !important; border-radius: 6px !important; background: #fff !important; color: #000 !important;
+        }
+        [data-theme="retro-mac"] #btn-toggle-preview:active, [data-theme="retro-mac"] #btn-new-resume:active, [data-theme="retro-mac"] #btn-add-jd:active, [data-theme="retro-mac"] .style-edit-btn:active {
+            background: #000 !important; color: #fff !important; box-shadow: 0 0 0 #000 !important; transform: translate(3px, 3px) !important;
+        }
+
+        /* Scrollbars */
+        [data-theme="sanrio-claw"] ::-webkit-scrollbar { width: 10px; background: transparent; }
+        [data-theme="sanrio-claw"] ::-webkit-scrollbar-thumb { background: #F9B3D1; border-radius: 10px; border: 2px solid #FDF2F6; }
+        [data-theme="retro-mac"] ::-webkit-scrollbar { width: 16px; background: repeating-linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff); background-size: 4px 4px; border-left: 2px solid #000; }
+        [data-theme="retro-mac"] ::-webkit-scrollbar-thumb { background: #fff; border: 2px solid #000; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #000; }
+
+        /* Sanrio cursor */
+        [data-theme="sanrio-claw"] #main-body, [data-theme="sanrio-claw"] #left-sidebar, [data-theme="sanrio-claw"] #jd-panel, [data-theme="sanrio-claw"] #right-panel, [data-theme="sanrio-claw"] #canvas-container {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg stroke='%23ffffff' stroke-width='14' stroke-linecap='round' stroke-linejoin='round' fill='none'%3E%3Cpath d='M32 0 C30 8 34 15 32 25 M10 48 C15 30 20 25 32 25 M54 48 C49 30 44 25 32 25 M10 48 C16 42 22 38 25 35 M54 48 C48 42 42 38 39 35'/%3E%3Ccircle cx='32' cy='25' r='10'/%3E%3C/g%3E%3Cg stroke='%23F9B3D1' stroke-width='8' stroke-linecap='round' stroke-linejoin='round' fill='none' opacity='0.8'%3E%3Cpath d='M34 2 C32 10 36 17 34 27 M8 50 C13 32 18 27 34 27 M56 50 C51 32 46 27 34 27 M8 50 C14 44 20 40 23 37 M56 50 C50 44 44 40 41 37'/%3E%3Ccircle cx='34' cy='27' r='8' fill='%23fff'/%3E%3C/g%3E%3Cg stroke='%23232021' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'%3E%3Cpath d='M32 0 C29 8 35 15 32 25 M10 48 C13 28 21 24 32 25 M54 48 C51 28 43 24 32 25 M10 48 C18 40 21 39 25 35 M54 48 C46 40 43 39 39 35'/%3E%3Cpath d='M31 2 C33 9 31 16 33 24' stroke-width='2'/%3E%3Ccircle cx='32' cy='25' r='7'/%3E%3C/g%3E%3C/svg%3E") 32 32, auto !important;
+        }
+        [data-theme="retro-mac"] #main-body, [data-theme="retro-mac"] #left-sidebar, [data-theme="retro-mac"] #jd-panel, [data-theme="retro-mac"] #right-panel, [data-theme="retro-mac"] #canvas-container {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='20'%3E%3Cpath d='M1,1 L1,16 L5,12 L8,18 L10,17 L7,11 L12,11 Z' fill='%23000' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E") 1 1, auto !important;
+        }
+        [data-theme] .a4-paper, [data-theme] .a4-paper * { cursor: auto !important; }
+
+        /* Theme Switcher Widget */
+        #theme-switcher { position: fixed; bottom: 20px; right: 20px; z-index: 99990; font-family: system-ui, -apple-system, sans-serif; }
+        #theme-toggle-btn { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 1px solid #e2e8f0; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,.1); transition: transform .2s, box-shadow .2s; }
+        #theme-toggle-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+        #theme-picker { position: absolute; bottom: 52px; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.12); padding: 6px; width: 190px; }
+        #theme-picker.tp-hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+        #theme-picker.tp-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        #theme-picker { transition: opacity .2s, transform .2s; }
+        .theme-opt { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background .15s; }
+        .theme-opt:hover { background: #f1f5f9; }
+        .theme-opt.active { background: #ede9fe; }
+        .theme-icon { font-size: 20px; flex-shrink: 0; line-height: 1; }
+        .theme-name { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.3; }
+        .theme-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
+
+        /* Sanrio theme switcher style */
+        [data-theme="sanrio-claw"] #theme-toggle-btn { border: 3px solid #F25599; background: #fff; box-shadow: 3px 3px 0px #F9B3D1; border-radius: 50%; }
+        [data-theme="sanrio-claw"] #theme-toggle-btn:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0px #F68DB9; }
+        [data-theme="sanrio-claw"] #theme-picker { border: 3px solid #F25599; border-radius: 16px; background: #fff; box-shadow: 6px 6px 0px #F9B3D1; font-family: 'Nunito', sans-serif; }
+        [data-theme="sanrio-claw"] .theme-opt:hover { background: #FDF2F6; border-radius: 8px; border: 2px solid #F25599; }
+        [data-theme="sanrio-claw"] .theme-opt.active { background: #F5EAEF; border: 2px solid #72525B; border-radius: 8px; }
+
+        /* Retro Mac theme switcher style */
+        [data-theme="retro-mac"] #theme-toggle-btn { border: 2px solid #000; border-radius: 6px; box-shadow: 3px 3px 0 #000; background: #fff; transition: none; }
+        [data-theme="retro-mac"] #theme-toggle-btn:active { background: #000; box-shadow: 0 0 0 #000; transform: translate(3px, 3px); }
+        [data-theme="retro-mac"] #theme-picker { border: 2px solid #000; border-radius: 0; box-shadow: 4px 4px 0 #000; }
+        [data-theme="retro-mac"] .theme-opt { border-radius: 0; border: 2px solid transparent; }
+        [data-theme="retro-mac"] .theme-opt:hover { background: #fff; border: 2px solid #000; }
+        [data-theme="retro-mac"] .theme-opt.active { background: #000; }
+        [data-theme="retro-mac"] .theme-opt.active .theme-name, [data-theme="retro-mac"] .theme-opt.active .theme-desc { color: #fff; }
     </style>
 </head>
 <body id="main-body" class="h-screen flex overflow-hidden text-slate-800 bg-white">
@@ -2591,23 +2723,24 @@
             renderSkillCards([]);
         }
 
+        // 拖拽手柄 SVG（全局常量）
+        const HANDLE_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/>
+            <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
+            <circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/>
+        </svg>`;
+
         /**
          * 构建单个模块的 HTML
          * @param {Section} section
          * @returns {string}
          */
         function buildSectionHtml(section) {
-            const handleSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/>
-                <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
-                <circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/>
-            </svg>`;
-
             let html = '';
 
             if (section.type === 'education' || section.type === 'experience' || section.type === 'skills' || section.type === 'summary') {
                 html += `<section class="resume-major-section" data-section="${section.type}">`;
-                html += `<span class="section-drag-handle" title="拖拽调整模块顺序">${handleSvg}</span>`;
+                html += `<span class="section-drag-handle" title="拖拽调整模块顺序">${HANDLE_SVG}</span>`;
 
                 if (section.type === 'education') {
                     html += `<div id="education-section">`;
@@ -2642,7 +2775,7 @@
                                 justify-content: center;
                                 cursor: grab;
                                 color: #94a3b8;
-                            ">${handleSvg}</span>`;
+                            ">${HANDLE_SVG}</span>`;
 
                             // 项目标题
                             html += `<div class="resume-flex-between bold w-full">
@@ -2667,7 +2800,7 @@
                                             justify-content: center;
                                             cursor: grab;
                                             color: #cbd5e1;
-                                        ">${handleSvg}</span>
+                                        ">${HANDLE_SVG}</span>
                                         <div class="editable-block w-full" contenteditable="true">
                                             <span class="mutable-verb" data-root-verb="${escapeHtml(bullet.actionVerb || '')}">${escapeHtml(bullet.actionVerb || '')}</span>
                                             <span class="verb-context">${escapeHtml(bullet.rest || '')}</span>
@@ -2694,7 +2827,7 @@
                             justify-content: center;
                             cursor: grab;
                             color: #94a3b8;
-                        ">${handleSvg}</span>
+                        ">${HANDLE_SVG}</span>
                         <div class="resume-flex-between bold w-full"><span class="editable-block" contenteditable="true">📝 新条目</span></div>
                         <ul class="resume-bullet-list mt-1">
                             <li id="target-bullet" class="bullet-item">
@@ -2710,7 +2843,7 @@
                                     justify-content: center;
                                     cursor: grab;
                                     color: #cbd5e1;
-                                ">${handleSvg}</span>
+                                ">${HANDLE_SVG}</span>
                                 <div id="target-content" class="editable-block w-full text-[13px] text-slate-400" contenteditable="true">点击此处开始撰写，或等待 AI 提炼素材并拖拽至此...</div>
                             </li>
                         </ul>
@@ -2732,7 +2865,22 @@
                     html += `<div class="editable-block resume-section-title" contenteditable="true">${escapeHtml(section.title || '技能与补充')}</div>`;
                     if (section.items && section.items.length > 0) {
                         section.items.forEach(item => {
-                            html += `<div class="editable-block resume-text-line" contenteditable="true">${escapeHtml(item.text || '')}</div>`;
+                            html += `<div class="editable-block resume-text-line" style="position: relative;" contenteditable="true">
+                                <span class="drag-handle" title="拖拽调整顺序" style="
+                                    position: absolute;
+                                    left: -20px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    width: 16px;
+                                    height: 16px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: grab;
+                                    color: #cbd5e1;
+                                ">${HANDLE_SVG}</span>
+                                ${escapeHtml(item.text || '')}
+                            </div>`;
                         });
                     }
                     html += `</div>`;
@@ -2741,7 +2889,22 @@
                     html += `<div class="editable-block resume-section-title" contenteditable="true">${escapeHtml(section.title || '个人总结')}</div>`;
                     if (section.items && section.items.length > 0) {
                         section.items.forEach(item => {
-                            html += `<div class="editable-block resume-text-line" contenteditable="true">${escapeHtml(item.text || '')}</div>`;
+                            html += `<div class="editable-block resume-text-line" style="position: relative;" contenteditable="true">
+                                <span class="drag-handle" title="拖拽调整顺序" style="
+                                    position: absolute;
+                                    left: -20px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    width: 16px;
+                                    height: 16px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: grab;
+                                    color: #cbd5e1;
+                                ">${HANDLE_SVG}</span>
+                                ${escapeHtml(item.text || '')}
+                            </div>`;
                         });
                     }
                     html += `</div>`;
@@ -4603,8 +4766,21 @@
 
                             const skillLine = document.createElement('div');
                             skillLine.className = 'editable-block resume-text-line';
+                            skillLine.style.position = 'relative';
                             skillLine.contentEditable = 'true';
-                            skillLine.innerHTML = `<strong>· ${skill}：</strong><span class="ai-highlight fluid-attribute" contenteditable="true" data-original="" data-jd-title="${skill}" data-id="${highlightId}" id="${highlightId}"><span>✨ </span>${snippet}<button class="undo-btn" onclick="undoRewrite('${highlightId}')" title="撤销修改">↩️</button></span>`;
+                            skillLine.innerHTML = `<span class="drag-handle" title="拖拽调整顺序" style="
+                                position: absolute;
+                                left: -20px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                width: 16px;
+                                height: 16px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                cursor: grab;
+                                color: #cbd5e1;
+                            ">${HANDLE_SVG}</span><strong>· ${skill}：</strong><span class="ai-highlight fluid-attribute" contenteditable="true" data-original="" data-jd-title="${skill}" data-id="${highlightId}" id="${highlightId}"><span>✨ </span>${snippet}<button class="undo-btn" onclick="undoRewrite('${highlightId}')" title="撤销修改">↩️</button></span>`;
                             skillsSection.appendChild(skillLine);
 
                             appendMessage(`✨ <strong>技能已生成</strong><br>已将"${skill}"相关的技能描述添加到技能与补充区域。<button class="mt-2 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-2 py-1 rounded transition-colors" onclick="undoRewrite('${highlightId}')">↩️ 撤销</button>`, false);
@@ -4614,8 +4790,21 @@
                         // AI 失败时降级为简单添加
                         const skillLine = document.createElement('div');
                         skillLine.className = 'editable-block resume-text-line';
+                        skillLine.style.position = 'relative';
                         skillLine.contentEditable = 'true';
-                        skillLine.innerHTML = `<strong>· ${skill}</strong>`;
+                        skillLine.innerHTML = `<span class="drag-handle" title="拖拽调整顺序" style="
+                            position: absolute;
+                            left: -20px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            width: 16px;
+                            height: 16px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: grab;
+                            color: #cbd5e1;
+                        ">${HANDLE_SVG}</span><strong>· ${skill}</strong>`;
                         skillsSection.appendChild(skillLine);
                         appendMessage(`✨ <strong>技能已添加</strong><br>已将"${skill}"添加到技能与补充区域。`, false);
                     }
@@ -4648,14 +4837,38 @@
                                 const snippet = result.data.snippet;
                                 const highlightId = 'highlight-' + Date.now();
 
-                                summaryLine.innerHTML = `<span class="ai-highlight fluid-attribute" contenteditable="true" data-original="${encodeURIComponent(originalText)}" data-jd-title="${skill}" data-id="${highlightId}" id="${highlightId}"><span>✨ </span>${snippet}<button class="undo-btn" onclick="undoRewrite('${highlightId}')" title="撤销修改">↩️</button></span>`;
+                                summaryLine.innerHTML = `<span class="drag-handle" title="拖拽调整顺序" style="
+                                    position: absolute;
+                                    left: -20px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    width: 16px;
+                                    height: 16px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: grab;
+                                    color: #cbd5e1;
+                                ">${HANDLE_SVG}</span><span class="ai-highlight fluid-attribute" contenteditable="true" data-original="${encodeURIComponent(originalText)}" data-jd-title="${skill}" data-id="${highlightId}" id="${highlightId}"><span>✨ </span>${snippet}<button class="undo-btn" onclick="undoRewrite('${highlightId}')" title="撤销修改">↩️</button></span>`;
 
                                 appendMessage(`✨ <strong>技能融入总结</strong><br>已将"${skill}"能力智能融入个人总结。<button class="mt-2 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-2 py-1 rounded transition-colors" onclick="undoRewrite('${highlightId}')">↩️ 撤销</button>`, false);
                             }
                         } catch (error) {
                             summaryOverlay.remove();
                             // AI 失败时降级为简单融入
-                            summaryLine.innerHTML = `<strong>${skill}：</strong>${originalText || '具备相关专业能力，能够胜任岗位要求'}`;
+                            summaryLine.innerHTML = `<span class="drag-handle" title="拖拽调整顺序" style="
+                                position: absolute;
+                                left: -20px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                width: 16px;
+                                height: 16px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                cursor: grab;
+                                color: #cbd5e1;
+                            ">${HANDLE_SVG}</span><strong>${skill}：</strong>${originalText || '具备相关专业能力，能够胜任岗位要求'}`;
                             appendMessage(`✨ <strong>技能融入总结</strong><br>已将"${skill}"能力突出显示在个人总结中。`, false);
                         }
                         return;
@@ -5223,6 +5436,14 @@
         function discardChangesAndExit() {
             // 关闭弹窗
             document.getElementById('exit-style-confirm-modal').classList.remove('visible');
+            // 恢复进入时的样式快照
+            if (initialStyleSnapshot) {
+                currentStyleConfig = { ...initialStyleSnapshot };
+                applyStyleConfig(currentStyleConfig);
+                updateStyleControlsUI();
+                console.log('[样式] 已放弃修改，恢复到进入时的状态');
+            }
+            hasUnsavedStyleChanges = false;
             // 退出
             performExitStyleEditMode();
         }
@@ -5834,8 +6055,8 @@
                         animation: 150,
                         handle: '.section-drag-handle', // 大模块拖拽手柄
                         draggable: '.resume-major-section',
-                        filter: 'header', // 排除头部（基本信息）
-                        preventOnFilter: false,
+                        filter: '.skills-section *, .summary-section *', // 排除技能区和总结区内部的所有元素
+                        preventOnFilter: true, // 点击 filter 元素时不触发拖拽
                         ghostClass: 'dragging-source',
                         dragClass: 'floated',
                         forceFallback: true,
@@ -5935,6 +6156,11 @@
                     animation: 150,
                     handle: '.drag-handle',
                     draggable: '.resume-text-line',
+                    group: {
+                        name: 'skills',
+                        pull: true,
+                        put: false // 不允许外部元素放入
+                    },
                     ghostClass: 'dragging-source',
                     dragClass: 'floated',
                     forceFallback: true,
@@ -5942,10 +6168,11 @@
                     fallbackOnBody: true,
                     swapThreshold: 0.65,
                     direction: 'vertical',
-                    delay: 0,
-                    delayOnTouchOnly: false,
+                    delay: 100, // 延迟触发，避免与父级拖拽冲突
+                    delayOnTouchOnly: true,
                     onStart: (evt) => {
                         console.log('[拖拽] 开始拖拽技能:', evt.item);
+                        evt.stopPropagation(); // 阻止事件冒泡
                     },
                     onEnd: (evt) => {
                         console.log('[拖拽] 技能拖拽结束，从', evt.oldIndex, '到', evt.newIndex);
@@ -5963,6 +6190,11 @@
                     animation: 150,
                     handle: '.drag-handle',
                     draggable: '.resume-text-line',
+                    group: {
+                        name: 'summary',
+                        pull: true,
+                        put: false // 不允许外部元素放入
+                    },
                     ghostClass: 'dragging-source',
                     dragClass: 'floated',
                     forceFallback: true,
@@ -5970,10 +6202,11 @@
                     fallbackOnBody: true,
                     swapThreshold: 0.65,
                     direction: 'vertical',
-                    delay: 0,
-                    delayOnTouchOnly: false,
+                    delay: 100, // 延迟触发，避免与父级拖拽冲突
+                    delayOnTouchOnly: true,
                     onStart: (evt) => {
                         console.log('[拖拽] 开始拖拽总结:', evt.item);
+                        evt.stopPropagation(); // 阻止事件冒泡
                     },
                     onEnd: (evt) => {
                         console.log('[拖拽] 总结拖拽结束，从', evt.oldIndex, '到', evt.newIndex);
@@ -6035,6 +6268,66 @@
             });
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // 🎨 Theme Engine — 三主题切换系统
+        // ═══════════════════════════════════════════════════════════
+        (function ThemeEngine() {
+            'use strict';
+            const THEMES = {
+                claude:        { name: 'Claude',      icon: '🤖', desc: '默认 · 专业简约' },
+                'retro-mac':   { name: 'Retro Mac',   icon: '🖥️', desc: '经典 · 1984 复古' },
+                'sanrio-claw': { name: '梦幻盲盒',     icon: '🎀', desc: '果冻弹跳 · 激萌开箱' }
+            };
+            let current = 'claude';
+            try { current = localStorage.getItem('_resume_theme') || 'claude'; } catch(e) {}
+
+            function apply(name) {
+                if (!THEMES[name]) name = 'claude';
+                current = name;
+                document.documentElement.setAttribute('data-theme', name);
+                document.body.setAttribute('data-theme', name);
+                try { localStorage.setItem('_resume_theme', name); } catch(e) {}
+                document.querySelectorAll('.theme-opt').forEach(el =>
+                    el.classList.toggle('active', el.dataset.theme === name));
+            }
+
+            function createSwitcher() {
+                const sw = document.createElement('div');
+                sw.id = 'theme-switcher';
+                sw.innerHTML = '<button id="theme-toggle-btn" title="切换界面主题">🎨</button>' +
+                    '<div id="theme-picker" class="tp-hidden">' +
+                    Object.entries(THEMES).map(([k, t]) =>
+                        '<div class="theme-opt' + (current === k ? ' active' : '') + '" data-theme="' + k + '">' +
+                        '<span class="theme-icon">' + t.icon + '</span>' +
+                        '<div><div class="theme-name">' + t.name + '</div><div class="theme-desc">' + t.desc + '</div></div>' +
+                        '</div>'
+                    ).join('') +
+                    '</div>';
+                document.body.appendChild(sw);
+
+                const picker = document.getElementById('theme-picker');
+                document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    picker.classList.toggle('tp-hidden');
+                    picker.classList.toggle('tp-visible');
+                });
+                sw.querySelectorAll('.theme-opt').forEach(el =>
+                    el.addEventListener('click', () => {
+                        apply(el.dataset.theme);
+                        picker.classList.add('tp-hidden');
+                        picker.classList.remove('tp-visible');
+                    }));
+                document.addEventListener('click', (e) => {
+                    if (!sw.contains(e.target)) { picker.classList.add('tp-hidden'); picker.classList.remove('tp-visible'); }
+                });
+            }
+
+            // 初始化
+            createSwitcher();
+            apply(current);
+            console.log('[主题] 主题切换器已初始化，当前主题:', current);
+        })();
     </script>
+</body>
 </body>
 </html>
