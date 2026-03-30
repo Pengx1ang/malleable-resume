@@ -1199,8 +1199,20 @@
            ═══════════════════════════════════════════════════════════ */
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap');
 
-        /* CSS Variable Anchors */
-        :root { --t-shell:#f1f5f9; --t-panel:#fff; --t-border:#e2e8f0; --t-text1:#1e293b; --t-text2:#64748b; --t-accent:#8b5cf6; --t-accent-s:#ede9fe; --t-btn:#1e293b; --t-btn-t:#fff; --t-r:12px; --t-shadow:0 1px 3px rgba(0,0,0,.04); }
+        /* === 优化后的主题变量锚点 === */
+        :root {
+            --t-shell: #f8fafc;
+            --t-panel: #ffffff;
+            --t-border: #e2e8f0;
+            --t-text1: #0f172a;
+            --t-text2: #475569;
+            --t-accent: #6366f1;
+            --t-accent-s: #eef2ff;
+            --t-btn: #0f172a;
+            --t-btn-t: #ffffff;
+            --t-r: 10px;
+            --t-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
         [data-theme="retro-mac"] { --t-shell:#dfdfdf; --t-panel:#fff; --t-border:#000; --t-text1:#000; --t-text2:#000; --t-accent:#000; --t-accent-s:#fff; --t-btn:#fff; --t-btn-t:#000; --t-r:6px; --t-shadow:3px 3px 0 #000; }
         [data-theme="sanrio-claw"] { --t-shell:#FDF2F6; --t-panel:#ffffff; --t-border:#F25599; --t-text1:#232021; --t-text2:#72525B; --t-accent:#72525B; --t-accent-s:#F5EAEF; --t-btn:#F25599; --t-btn-t:#fff; --t-r:16px 8px 16px 8px/8px 16px 8px 16px; }
 
@@ -1211,9 +1223,121 @@
             transition: background-color .4s, box-shadow .4s, border-radius .4s, border-color .4s;
         }
 
+        /* === 默认主题增强样式 - Claude Theme Enhancements === */
+        /* 面板边框和背景优化 */
+        #left-sidebar, #jd-panel, #right-panel {
+            background: var(--t-panel);
+            border-color: var(--t-border);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+        }
+
+        /* JD 卡片和模板卡片优化 */
+        .jd-card-item, #jd-drag-source, .template-card {
+            background: white;
+            border: 1px solid var(--color-neutral-200);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xs);
+            transition: all var(--transition-base);
+        }
+        .jd-card-item:hover, #jd-drag-source:hover, .template-card:hover {
+            border-color: var(--color-primary-300);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .jd-card-item:active, #jd-drag-source:active, .template-card:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-xs);
+        }
+
+        /* 历史记录项优化 */
+        .history-item {
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-fast);
+        }
+        .history-item:hover {
+            background-color: var(--color-neutral-100);
+        }
+        .history-item.active {
+            background-color: var(--color-primary-100);
+            color: var(--color-primary-700);
+            font-weight: 600;
+        }
+
+        /* 类别分组头部优化 */
+        .history-category-header {
+            background-color: var(--color-neutral-50);
+            border-radius: var(--radius-md);
+            margin: var(--spacing-2) var(--spacing-2);
+        }
+        .history-category-header:hover {
+            background-color: var(--color-neutral-100);
+        }
+
+        /* Base 头部优化 */
+        .history-base-header {
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-fast);
+        }
+        .history-base-header:hover {
+            background-color: var(--color-neutral-50);
+        }
+        .history-base-header.active {
+            background-color: var(--color-primary-50);
+            color: var(--color-primary-700);
+        }
+
+        /* 聊天消息优化 */
+        #chat-messages > div {
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--color-neutral-200);
+        }
+        #chat-messages > div.bg-indigo-600 {
+            background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-700)) !important;
+            color: white !important;
+            box-shadow: var(--shadow-md);
+            border: none;
+        }
+
         /* Shell background */
         [data-theme]#main-body { background-color: var(--t-panel) !important; }
         [data-theme] #canvas-container { background-color: var(--t-shell) !important; }
+
+        /* === 默认主题滚动条美化 === */
+        #left-sidebar::-webkit-scrollbar, #jd-panel::-webkit-scrollbar, #right-panel::-webkit-scrollbar,
+        .history-versions-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        #left-sidebar::-webkit-scrollbar-thumb, #jd-panel::-webkit-scrollbar-thumb, #right-panel::-webkit-scrollbar-thumb,
+        .history-versions-container::-webkit-scrollbar-thumb {
+            background: var(--color-neutral-300);
+            border-radius: var(--radius-full);
+        }
+        #left-sidebar::-webkit-scrollbar-thumb:hover, #jd-panel::-webkit-scrollbar-thumb:hover, #right-panel::-webkit-scrollbar-thumb:hover {
+            background: var(--color-neutral-400);
+        }
+
+        /* === 默认主题按钮增强 === */
+        #btn-toggle-preview, #btn-new-resume, #btn-add-jd, .style-edit-btn {
+            background: white;
+            color: var(--color-neutral-700);
+            border: 1px solid var(--color-neutral-300);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xs);
+            transition: all var(--transition-fast);
+            font-weight: 500;
+        }
+        #btn-toggle-preview:hover, #btn-new-resume:hover, #btn-add-jd:hover, .style-edit-btn:hover {
+            background: var(--color-neutral-50);
+            border-color: var(--color-neutral-400);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+        #btn-toggle-preview:active, #btn-new-resume:active, #btn-add-jd:active, .style-edit-btn:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-xs);
+            background: var(--color-neutral-100);
+        }
         [data-theme="retro-mac"] #canvas-container {
             background-image: linear-gradient(45deg, #d4d4d4 25%, transparent 25%, transparent 75%, #d4d4d4 75%, #d4d4d4), linear-gradient(45deg, #d4d4d4 25%, transparent 25%, transparent 75%, #d4d4d4 75%, #d4d4d4) !important;
             background-size: 4px 4px !important; background-position: 0 0, 2px 2px !important;
