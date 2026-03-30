@@ -2167,53 +2167,80 @@
 
             try {
                 // 检查库是否加载
-                if (typeof pdfjsLib === 'undefined') {
-                    throw new Error('PDF.js 库未加载，请检查网络连接');
-                }
                 if (typeof Tesseract === 'undefined') {
                     throw new Error('Tesseract.js 库未加载，请检查网络连接');
                 }
 
-                // 步骤 1: 读取文件为 ArrayBuffer
-                updateParsingProgress(0, '读取文件中...', file.name);
-                const arrayBuffer = await file.arrayBuffer();
-
-                // 步骤 2: 使用 PDF.js 渲染 PDF 为图片
-                updateParsingProgress(0, '渲染 PDF 为图片...', '使用 PDF.js');
-
-                // 设置 PDF.js worker（使用与主库相同版本）
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                console.log('[前端 OCR] PDF 共', pdf.numPages, '页');
+                // 检查文件类型
+                const fileExt = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+                const isImageFile = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'].includes(fileExt);
 
                 let fullText = '';
 
-                // 逐页处理
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    updateParsingProgress(1, `OCR 识别中...`, `第 ${pageNum}/${pdf.numPages} 页`);
+                if (isImageFile) {
+                    // ★ 图片格式：直接使用 Tesseract.js 识别
+                    console.log('[前端 OCR] 检测到图片格式，使用 Tesseract.js 直接识别');
+                    updateParsingProgress(0, 'OCR 识别中...', file.name);
 
-                    const page = await pdf.getPage(pageNum);
-                    const scale = 2; // 2 倍分辨率
-                    const viewport = page.getViewport({ scale });
-
-                    // 创建离屏 canvas
-                    const canvas = document.createElement('canvas');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    const ctx = canvas.getContext('2d');
-
-                    // 渲染页面
-                    await page.render({ canvasContext: ctx, viewport }).promise;
+                    // 读取为 Blob
+                    const blob = await file.arrayBuffer();
 
                     // OCR 识别（使用简体中文语言包）
-                    updateParsingProgress(1, `OCR 识别中...`, `正在识别第 ${pageNum} 页`);
-                    const result = await Tesseract.recognize(canvas, 'chi_sim');
-                    fullText += result.data.text + '\n';
-                    console.log(`[前端 OCR] 第 ${pageNum} 页提取了 ${result.data.text.length} 字符`);
-                }
+                    const result = await Tesseract.recognize(blob, 'chi_sim', {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                updateParsingProgress(0, `OCR ${Math.round(m.progress * 100)}%`, file.name);
+                            }
+                        }
+                    });
+                    fullText = result.data.text;
+                    console.log('[前端 OCR] 图片识别完成，字符数:', fullText.length);
 
-                console.log('[前端 OCR] 完成，总字符数:', fullText.length);
+                } else {
+                    // ★ PDF 格式：使用 PDF.js 渲染 + Tesseract.js 识别
+                    if (typeof pdfjsLib === 'undefined') {
+                        throw new Error('PDF.js 库未加载，请检查网络连接');
+                    }
+
+                    // 步骤 1: 读取文件为 ArrayBuffer
+                    updateParsingProgress(0, '读取文件中...', file.name);
+                    const arrayBuffer = await file.arrayBuffer();
+
+                    // 步骤 2: 使用 PDF.js 渲染 PDF 为图片
+                    updateParsingProgress(0, '渲染 PDF 为图片...', '使用 PDF.js');
+
+                    // 设置 PDF.js worker（使用与主库相同版本）
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    console.log('[前端 OCR] PDF 共', pdf.numPages, '页');
+
+                    // 逐页处理
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        updateParsingProgress(1, `OCR 识别中...`, `第 ${pageNum}/${pdf.numPages} 页`);
+
+                        const page = await pdf.getPage(pageNum);
+                        const scale = 2; // 2 倍分辨率
+                        const viewport = page.getViewport({ scale });
+
+                        // 创建离屏 canvas
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        const ctx = canvas.getContext('2d');
+
+                        // 渲染页面
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+
+                        // OCR 识别（使用简体中文语言包）
+                        updateParsingProgress(1, `OCR 识别中...`, `正在识别第 ${pageNum} 页`);
+                        const result = await Tesseract.recognize(canvas, 'chi_sim');
+                        fullText += result.data.text + '\n';
+                        console.log(`[前端 OCR] 第 ${pageNum} 页提取了 ${result.data.text.length} 字符`);
+                    }
+
+                    console.log('[前端 OCR] 完成，总字符数:', fullText.length);
+                }
 
                 // 步骤 3: 调用 AI 解析提取的文字
                 updateParsingProgress(2, 'AI 解析中...', '结构化处理');
