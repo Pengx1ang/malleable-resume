@@ -68,13 +68,24 @@ async function extractTextFromFile(filePath, originalName) {
             console.log('[extractTextFromFile] 开始读取 PDF...');
             const dataBuffer = fs.readFileSync(filePath);
             console.log('[extractTextFromFile] PDF 大小:', dataBuffer.length, 'bytes');
+
             const data = await pdfParse(dataBuffer);
             console.log('[extractTextFromFile] PDF 解析结果:', data ? '有数据' : '无数据');
-            text = data.text || '';
+
+            // 安全检查：确保 data 和 data.text 存在
+            if (!data) {
+                console.warn('[extractTextFromFile] PDF 解析返回空数据');
+                text = '';
+            } else if (!data.text) {
+                console.warn('[extractTextFromFile] PDF 解析返回的 data.text 为空');
+                text = '';
+            } else {
+                text = data.text;
+            }
+
             console.log('[extractTextFromFile] 提取的文字长度:', text.length);
 
             // 如果文字太少（少于 100 字符），标记为图片型 PDF
-            // 前端会收到提示并建议用户上传文字版或使用前端 OCR
             if (text.length < 100) {
                 console.log('[警告] PDF 文字提取不足 100 字符，可能是图片型 PDF');
                 isImagePdf = true;
@@ -83,14 +94,22 @@ async function extractTextFromFile(filePath, originalName) {
 
         } else if (ext === '.docx') {
             const result = await mammoth.extractRawText({ path: filePath });
-            return result.value;
+            return result.value || '';
+        } else if (ext === '.doc') {
+            // .doc 格式不支持，返回错误
+            throw new Error('.doc 格式不支持，请另存为 .docx 或 PDF 格式');
         } else if (ext === '.txt') {
             return fs.readFileSync(filePath, 'utf-8');
+        } else if (ext === '.jpg' || ext === '.jpeg' || ext === '.png' || ext === '.gif' || ext === '.webp') {
+            // 图片格式，返回标记让前端使用 OCR
+            console.log('[extractTextFromFile] 图片格式文件，需要 OCR');
+            return { text: '', isImagePdf: true, requiresOcr: true, imageType: ext };
         } else {
-            // 其他格式尝试直接读取
-            return fs.readFileSync(filePath, 'utf-8');
+            // 其他不支持的格式
+            throw new Error(`不支持的文件格式：${ext}`);
         }
     } catch (error) {
+        console.error('[extractTextFromFile] 错误:', error);
         throw new Error(`文件解析失败：${error.message}`);
     }
 }
@@ -172,14 +191,18 @@ app.post('/api/parse', upload.single('file'), async (req, res) => {
 
         console.log(`[步骤 1 完成] 提取了 ${rawText.length} 字符，isImagePdf: ${isImagePdf}，耗时 ${Date.now() - startTime}ms`);
 
-        // ★ 如果是图片型 PDF，直接返回错误，提示用户使用前端 OCR
+        // ★ 如果是图片型 PDF 或图片格式，返回错误，提示用户使用前端 OCR
         if (isImagePdf) {
             fs.unlinkSync(req.file.path);
+            const ocrMessage = extractResult.requiresOcr
+                ? '该文件是图片格式（JPG/PNG），需要 OCR 识别。请点击"启动 OCR"按钮，AI 将自动识别图片中的文字。'
+                : '该 PDF 是图片格式，需要 OCR 识别。请使用前端 OCR 功能（推荐）或上传文字版简历。';
             return res.json({
                 success: false,
-                error: '图片型 PDF',
-                message: '该 PDF 是图片格式，需要 OCR 识别。请使用前端 OCR 功能（推荐）或上传文字版简历。',
-                requiresOcr: true
+                error: extractResult.requiresOcr ? '图片格式文件' : '图片型 PDF',
+                message: ocrMessage,
+                requiresOcr: true,
+                extractedText: rawText  // 如果有少量文字，也返回
             });
         }
 
@@ -240,7 +263,21 @@ app.post('/api/parse', upload.single('file'), async (req, res) => {
         const responseText = await callLLM(messages, true);
         console.log(`[步骤 2 完成] AI 耗时 ${Date.now() - aiStart}ms`);
 
-        const parsedData = JSON.parse(responseText);
+        // ★ 容错处理：确保 AI 返回了有效的 JSON
+        let parsedData;
+        try {
+            parsedData = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('[解析错误] AI 返回的 JSON 解析失败:', parseError);
+            console.error('[原始响应]', responseText.substring(0, 500));
+            fs.unlinkSync(req.file.path);
+            return res.json({
+                success: false,
+                error: 'AI 解析失败',
+                message: 'AI 返回的数据格式有误，请稍后重试或上传文字版简历。',
+                extractedText: rawText.substring(0, 500)
+            });
+        }
 
         // 清理临时文件
         fs.unlinkSync(req.file.path);
@@ -249,10 +286,11 @@ app.post('/api/parse', upload.single('file'), async (req, res) => {
         console.log(`[解析完成] 总耗时：${totalTime}ms`);
 
         // ★ 空数据校验：检查解析结果是否有实际内容
+        // 注意：AI 返回的格式是 basicInfo.name，不是 name
         const hasContent = parsedData && (
-            (parsedData.name && parsedData.name.trim().length > 0) ||
+            (parsedData.basicInfo && parsedData.basicInfo.name && parsedData.basicInfo.name.trim().length > 0) ||
             (parsedData.education && Array.isArray(parsedData.education) && parsedData.education.length > 0) ||
-            (parsedData.experience && Array.isArray(parsedData.experience) && parsedData.experience.length > 0)
+            (parsedData.experiences && Array.isArray(parsedData.experiences) && parsedData.experiences.length > 0)
         );
 
         if (!hasContent) {

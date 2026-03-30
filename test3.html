@@ -2098,9 +2098,19 @@
                 method: 'POST',
                 body: formData
             });
+
+            // ★ 容错处理：500 错误时尝试解析错误信息
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || '上传失败');
+                try {
+                    const error = await response.json();
+                    throw new Error(error.error || error.message || '上传失败');
+                } catch (e) {
+                    // 如果响应不是 JSON，返回原始状态文本
+                    if (response.status === 500) {
+                        throw new Error(`服务器错误 (${response.status})，请稍后重试`);
+                    }
+                    throw new Error(`上传失败 (${response.status})`);
+                }
             }
             return await response.json();
         }
@@ -3125,10 +3135,10 @@
 
                 // ★ 检查后端返回的 success 字段（可能为 false 表示解析失败）
                 if (!result.success) {
-                    // 如果是图片型 PDF，询问用户是否使用前端 OCR
+                    // 如果是图片型 PDF 或图片格式，询问用户是否使用前端 OCR
                     if (result.requiresOcr) {
                         updateParsingProgress(1, '需要 OCR', '图片格式简历');
-                        appendMessage(`⚠️ <strong>检测到图片型 PDF</strong><br>该简历是图片格式，需要 OCR 识别。是否立即启动 OCR？`, false);
+                        appendMessage(`⚠️ <strong>检测到图片格式简历</strong><br>该文件是图片（JPG/PNG）或图片型 PDF，需要 OCR 识别。是否立即启动 OCR？`, false);
 
                         // 创建 OCR 确认按钮
                         const ocrConfirm = document.createElement('div');
