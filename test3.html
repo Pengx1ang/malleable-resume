@@ -695,24 +695,25 @@
                 inset 0 0 0 1px rgba(255,255,255,0.5);
             transform: translateY(-1px);
         }
-        /* 添加提示标签 */
+        /* 添加提示标签 - 完整操作说明 */
         .ai-highlight::after {
-            content: '✏️ 点击编辑';
+            content: '✏️ 单击编辑 | ↕️ 滚动改话术 | ↔️ 拖拽调长短 | ⌨️ Alt+ 点击溯源';
             position: absolute;
-            top: -20px;
+            top: -28px;
             left: 50%;
             transform: translateX(-50%) translateY(4px);
-            background: #4f46e5;
+            background: #1e293b;
             color: white;
             font-size: 10px;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
         }
         .ai-highlight:hover::after {
             opacity: 1;
@@ -1783,6 +1784,34 @@
         .tooltip-left::after {
             bottom: auto;
             top: 50%;
+            right: calc(100% + 4px);
+            left: auto;
+            transform: translateY(-50%) translateX(8px);
+            border-top-color: transparent;
+            border-left-color: #1e293b;
+        }
+        /* 底部 tooltip - 用于顶部按钮，防止溢出 */
+        .tooltip-bottom::before {
+            bottom: auto;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+        }
+        .tooltip-bottom::after {
+            bottom: auto;
+            top: calc(100% + 2px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            border-top-color: transparent;
+            border-bottom-color: #1e293b;
+        }
+        .tooltip-bottom:hover::before,
+        .tooltip-bottom:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+            bottom: auto;
+            top: 50%;
             right: calc(100% + 2px);
             left: auto;
             transform: translateY(-50%) translateX(8px);
@@ -2493,7 +2522,7 @@
     <div id="canvas-container" class="flex flex-col items-center pt-2 w-full relative">
         <div id="main-toolbar-container" class="w-full max-w-[820px] max-w-[820px] z-[90] flex justify-between items-start pointer-events-none">
             <!-- 旧版排版工具栏已删除 - 功能已整合到样式编辑模式 -->
-            <button id="btn-toggle-preview" class="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-slate-800 rounded-xl text-[12px] font-bold text-white hover:bg-slate-900 shadow-lg transition-all">
+            <button id="btn-toggle-preview" class="tooltip tooltip-bottom pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-slate-800 rounded-xl text-[12px] font-bold text-white hover:bg-slate-900 shadow-lg transition-all" data-tooltip="进入样式编辑模式">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 <span id="preview-text">样式编辑</span>
             </button>
@@ -2620,7 +2649,7 @@
         <div class="chat-panel-content flex-1 flex flex-col" id="chat-panel">
             <div class="p-4 border-b border-slate-100 font-bold text-[14px] flex items-center justify-between">
                 <span>AI Copilot</span>
-                <button id="btn-add-jd" class="tooltip text-xs bg-purple-50 hover:bg-purple-100 text-purple-600 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1" data-tooltip="添加岗位描述，AI 将提炼核心要求">
+                <button id="btn-add-jd" class="tooltip tooltip-bottom text-xs bg-purple-50 hover:bg-purple-100 text-purple-600 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1" data-tooltip="添加岗位描述，AI 将提炼核心要求">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     添加 JD
                 </button>
