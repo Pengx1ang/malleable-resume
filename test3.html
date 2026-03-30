@@ -17,17 +17,17 @@
 
         /* === 1. 基础重置与核心变量 === */
         :root {
-            /* 主色调 - 精致蓝紫色系 (Refined Indigo) */
-            --color-primary-50: #eff6ff;
-            --color-primary-100: #dbeafe;
-            --color-primary-200: #bfdbfe;
-            --color-primary-300: #93c5fd;
-            --color-primary-400: #60a5fa;
-            --color-primary-500: #4f46e5;
-            --color-primary-600: #4338ca;
-            --color-primary-700: #3730a3;
-            --color-primary-800: #312e81;
-            --color-primary-900: #1e1b4b;
+            /* 主色调 - 高级紫色系 (Unified Purple System) */
+            --color-primary-50: #faf5ff;
+            --color-primary-100: #f3e8ff;
+            --color-primary-200: #e9d5ff;
+            --color-primary-300: #d8b4fe;
+            --color-primary-400: #c084fc;
+            --color-primary-500: #a855f7;
+            --color-primary-600: #9333ea;
+            --color-primary-700: #7e22ce;
+            --color-primary-800: #6b21a8;
+            --color-primary-900: #581c87;
 
             /* 中性色 - 带蓝紫调的高级灰 */
             --color-neutral-50: #f8fafc;
@@ -48,8 +48,8 @@
             --color-warning-light: #fef3c7;
             --color-error: #dc2626;
             --color-error-light: #fee2e2;
-            --color-info: #4f46e5;
-            --color-info-light: #e0e7ff;
+            --color-info: #a855f7;
+            --color-info-light: #f3e8ff;
 
             /* 间距系统 - 4px 基准 */
             --spacing-1: 4px;
@@ -639,10 +639,10 @@
         .typo-tool-group { display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 8px; flex-shrink: 0; }
         .typo-label { font-size: 11px; font-weight: 700; color: #64748b; user-select: none; margin-right: 2px;}
         .typo-select, .typo-input { background: #f8fafc; border: 1px solid transparent; font-size: 12px; font-weight: 600; color: #334155; outline: none; text-align: center; border-radius: 4px; padding: 4px 6px; font-family: inherit; }
-        .typo-select:hover, .typo-input:hover, .typo-select:focus, .typo-input:focus { background: #fff; border-color: #8b5cf6; color: #4f46e5; }
+        .typo-select:hover, .typo-input:hover, .typo-select:focus, .typo-input:focus { background: #fff; border-color: #c084fc; color: #9333ea; }
         .typo-select { appearance: none; -webkit-appearance: none; padding-right: 16px; background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; cursor: pointer;}
         .typo-btn { display: flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; border-radius: 6px; color: #64748b; cursor: pointer; font-weight: bold; }
-        .typo-btn:hover { background-color: #e0e7ff; color: #4f46e5; }
+        .typo-btn:hover { background-color: #f3e8ff; color: #9333ea; }
         input[type="color"] { -webkit-appearance: none; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); outline: none;}
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
@@ -688,10 +688,10 @@
             to { transform: translateX(0); opacity: 1; }
         }
         .ai-highlight:hover {
-            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-            border-color: #a78bfa;
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border-color: #c084fc;
             box-shadow:
-                0 2px 8px rgba(139, 92, 246, 0.25),
+                0 2px 8px rgba(168, 85, 247, 0.25),
                 inset 0 0 0 1px rgba(255,255,255,0.5);
             transform: translateY(-1px);
         }
@@ -725,12 +725,12 @@
             top: 2px;
             right: 2px;
             background: linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%);
-            border: 1px solid rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(168, 85, 247, 0.3);
             border-radius: 5px;
             padding: 3px;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: #7c3aed;
+            color: #9333ea;
             opacity: 0.7;
             display: flex;
             align-items: center;
@@ -744,8 +744,8 @@
         .ai-highlight:hover .undo-btn {
             opacity: 1;
             background: linear-gradient(180deg, #f3e8ff 0%, #e9d5ff 100%);
-            border-color: rgba(139, 92, 246, 0.5);
-            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+            border-color: rgba(168, 85, 247, 0.5);
+            box-shadow: 0 2px 4px rgba(168, 85, 247, 0.2);
             transform: scale(1.05);
         }
         .ai-highlight .undo-btn:hover {
@@ -928,14 +928,14 @@
             transform: translateY(-1px);
         }
         .style-edit-btn.primary {
-            background: linear-gradient(180deg, #4f46e5 0%, #4338ca 100%);
+            background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
             color: white;
-            border-color: rgba(79, 70, 229, 0.5);
-            box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
+            border-color: rgba(168, 85, 247, 0.5);
+            box-shadow: 0 1px 3px rgba(168, 85, 247, 0.3);
         }
         .style-edit-btn.primary:hover {
-            background: linear-gradient(180deg, #4338ca 0%, #3730a3 100%);
-            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+            background: linear-gradient(180deg, #9333ea 0%, #7e22ce 100%);
+            box-shadow: 0 2px 6px rgba(168, 85, 247, 0.4);
         }
 
         /* 左侧图层树面板 - 增强对比度 */
@@ -994,13 +994,13 @@
             margin: 2px 8px;
         }
         .layer-tree-item:hover {
-            background: linear-gradient(90deg, rgba(79, 70, 229, 0.08) 0%, rgba(79, 70, 229, 0.04) 100%);
-            color: #4338ca;
+            background: linear-gradient(90deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.04) 100%);
+            color: #9333ea;
         }
         .layer-tree-item.selected {
-            background: linear-gradient(90deg, rgba(79, 70, 229, 0.15) 0%, rgba(79, 70, 229, 0.08) 100%);
-            color: #3730a3;
-            box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.12);
+            background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.08) 100%);
+            color: #7e22ce;
+            box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.12);
         }
         /* 层级样式 - 通过缩进、字号、字重区分 */
         .layer-tree-item-root {
@@ -1332,12 +1332,12 @@
             background: #f8fafc;
         }
         .modal-btn.primary {
-            background: #4f46e5;
+            background: #a855f7;
             color: white;
-            border-color: #4f46e5;
+            border-color: #a855f7;
         }
         .modal-btn.primary:hover {
-            background: #4338ca;
+            background: #9333ea;
         }
         .modal-btn.danger {
             color: #dc2626;
@@ -1907,7 +1907,7 @@
             --t-border: #e2e8f0;
             --t-text1: #0f172a;
             --t-text2: #475569;
-            --t-accent: #6366f1;
+            --t-accent: #a855f7;
             --t-accent-s: #eef2ff;
             --t-btn: #0f172a;
             --t-btn-t: #ffffff;
