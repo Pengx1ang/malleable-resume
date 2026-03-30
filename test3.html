@@ -1204,6 +1204,20 @@
                 <p id="parsing-time" class="text-xs text-slate-400 mt-4"></p>
             </div>
 
+            <!-- JD 分析专用遮罩层（轻微模糊，透明背景） -->
+            <div id="jd-analysis-overlay" class="hidden absolute inset-0 z-20 bg-white/20 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+                <div class="bg-white/95 backdrop-blur-md rounded-2xl px-8 py-6 shadow-2xl border border-indigo-100">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 rounded-full border-4 border-indigo-400 border-t-indigo-600 animate-spin"></div>
+                        <div>
+                            <p id="jd-analysis-status" class="text-sm font-bold text-indigo-600">正在分析 JD...</p>
+                            <p id="jd-analysis-detail" class="text-xs text-slate-500">提取核心要求</p>
+                        </div>
+                    </div>
+                    <p id="jd-analysis-time" class="text-xs text-slate-400 text-center"></p>
+                </div>
+            </div>
+
             <div id="resume-content" class="w-full h-full">
                 <header class="pb-2 mb-2 flex justify-between items-end border-b border-slate-100">
                     <div class="w-full">
@@ -4092,19 +4106,19 @@
             // 关闭模态框
             jdModal.classList.add('hidden');
 
-            // 显示进度遮罩层 - 轻微模糊简历内容
-            parsingOverlay.classList.remove('hidden');
+            // 显示 JD 分析专用遮罩层（轻微模糊）
+            const jdOverlay = document.getElementById('jd-analysis-overlay');
+            jdOverlay.classList.remove('hidden');
             // 不隐藏简历内容，只添加模糊效果
             resumeContent.style.filter = 'blur(4px)';
             resumeContent.style.pointerEvents = 'none';
-            updateParsingProgress(0, '正在分析 JD...', '提取核心要求');
-            document.getElementById('parsing-time').innerText = '';
 
             // 启动计时器
             const jdStartTime = Date.now();
             const jdTimerInterval = setInterval(() => {
                 const elapsed = Date.now() - jdStartTime;
-                document.getElementById('parsing-time').innerText = `已等待：${(elapsed / 1000).toFixed(1)}秒`;
+                const jdTimeEl = document.getElementById('jd-analysis-time');
+                if (jdTimeEl) jdTimeEl.innerText = `已等待：${(elapsed / 1000).toFixed(1)}秒`;
             }, 500);
 
             try {
@@ -4115,9 +4129,6 @@
                 clearInterval(jdTimerInterval);
 
                 if (result.success && result.data.keyRequirements) {
-                    // 步骤 2: 渲染卡片
-                    updateParsingProgress(1, '正在生成卡片...', `${result.data.keyRequirements.length} 个核心要求`);
-
                     // 渲染 JD 卡片到素材区
                     renderJdCards(result.data.keyRequirements);
 
@@ -4131,21 +4142,21 @@
                     }
 
                     // 完成
-                    updateParsingProgress(2, '分析完成', '即将展示...');
-                    document.getElementById('parsing-time').innerText = `总耗时：${((Date.now() - jdStartTime) / 1000).toFixed(1)}秒`;
+                    const jdTimeEl = document.getElementById('jd-analysis-time');
+                    if (jdTimeEl) jdTimeEl.innerText = `总耗时：${((Date.now() - jdStartTime) / 1000).toFixed(1)}秒`;
 
                     // 提示成功
                     appendMessage(`✨ <strong>JD 分析完成！</strong><br>已提取 ${result.data.keyRequirements.length} 个核心要求，卡片已添加到左侧素材区，公司信息已自动更新。`, false);
 
                     setTimeout(() => {
-                        parsingOverlay.classList.add('hidden');
+                        jdOverlay.classList.add('hidden');
                         resumeContent.style.filter = '';
                         resumeContent.style.pointerEvents = '';
                     }, 500);
                 } else {
                     clearInterval(jdTimerInterval);
                     appendMessage(`❌ <strong>分析失败</strong><br>${result.message || '无法从 JD 中提取核心要求'}`, false);
-                    parsingOverlay.classList.add('hidden');
+                    jdOverlay.classList.add('hidden');
                     resumeContent.style.filter = '';
                     resumeContent.style.pointerEvents = '';
                 }
@@ -4153,7 +4164,7 @@
                 console.error('JD analyze error:', error);
                 clearInterval(jdTimerInterval);
                 appendMessage(`❌ <strong>分析失败</strong><br>${error.message}`, false);
-                parsingOverlay.classList.add('hidden');
+                jdOverlay.classList.add('hidden');
                 resumeContent.style.filter = '';
                 resumeContent.style.pointerEvents = '';
             }
@@ -4205,10 +4216,8 @@
                 const version = resumeLibraryStore.getVersion(resumeLibraryStore.state.selectedVersionId);
                 if (version) {
                     version.jdSnapshot = jdSnapshot;
-                    // 命名格式：XX 岗位简历 - 公司名 | 岗位名
-                    version.title = jdSnapshot.companyPosition
-                        ? `${jobCategory}岗位简历 - ${jdSnapshot.companyPosition}`
-                        : version.title;
+                    // 命名格式：公司名 | 岗位名（如"美团 | 数据产品经理"）
+                    version.title = jdSnapshot.companyPosition || version.title;
                     version.updatedAt = new Date().toISOString();
 
                     // 保存技能卡片到母版简历
@@ -4226,19 +4235,28 @@
                     renderHistoryList();
                 }
             }
-            // 否则保存到母版简历
+            // 否则自动创建岗位版本
             else {
                 const base = resumeLibraryStore.getBase(resumeLibraryStore.state.selectedBaseResumeId);
                 if (base) {
+                    // 创建岗位版本
+                    const versionTitle = jdSnapshot.companyPosition || '新岗位版本';
+                    const newVersion = resumeLibraryStore.createVersion(base.id, versionTitle, jdSnapshot);
+
+                    // 保存技能卡片到母版简历
                     base.skillCards = skillCardsData;
-                    base.jdSnapshot = jdSnapshot; // 基础版也缓存 JD 信息
                     base.category = jobCategory; // 保存岗位类别
                     base.updatedAt = new Date().toISOString();
+
                     resumeLibraryStore.persist();
+                    console.log('[JD 保存] 已创建岗位版本:', newVersion.id);
+
+                    // 重新渲染左侧列表
+                    renderHistoryList();
                 }
+
                 // 同时缓存到全局变量
                 window.currentJDAnalysis = jdSnapshot;
-                console.log('[JD 保存] 已保存到母版简历:', base.id);
             }
         }
 
