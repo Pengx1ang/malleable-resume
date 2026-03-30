@@ -7943,23 +7943,23 @@
             }, duration);
         }
 
-        // 粒子效果
+        // 粒子效果 - 精致版
         function createConfetti(target) {
             const rect = target.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
             const colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#fbbf24', '#fcd34d'];
 
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 6; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'confetti-particle';
-                particle.style.left = centerX + (Math.random() - 0.5) * 100 + 'px';
+                particle.style.left = centerX + (Math.random() - 0.5) * 80 + 'px';
                 particle.style.top = centerY + 'px';
                 particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.animationDelay = Math.random() * 0.2 + 's';
+                particle.style.animationDelay = Math.random() * 0.15 + 's';
                 document.body.appendChild(particle);
 
-                setTimeout(() => particle.remove(), 1500);
+                setTimeout(() => particle.remove(), 1200);
             }
         }
 
