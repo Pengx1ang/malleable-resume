@@ -1943,6 +1943,35 @@
             },
 
             /**
+             * 创建新的母版简历
+             * @param {string} [title] - 可选标题
+             * @returns {ResumeBase}
+             */
+            createBase(title = '未命名简历') {
+                const now = new Date().toISOString();
+                const newBase = {
+                    id: 'base-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                    title: title,
+                    pinned: false,
+                    sortOrder: this.state.bases.length,
+                    createdAt: now,
+                    updatedAt: now,
+                    latestContentJson: this.createEmptyResumeDoc(),
+                    collapsed: false,
+                    searchText: title.toLowerCase(),
+                    jdSnapshot: null,
+                    companyInfo: null,
+                    skillCards: [],
+                    category: '未分类'
+                };
+                this.state.bases.unshift(newBase);
+                this.state.selectedBaseResumeId = newBase.id;
+                this.currentEditingDoc = JSON.parse(JSON.stringify(newBase.latestContentJson));
+                this.persist();
+                return newBase;
+            },
+
+            /**
              * 在指定类别下创建新的 base（空简历）
              * @param {string} category - 类别名称
              * @returns {ResumeBase}
