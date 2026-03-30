@@ -1590,27 +1590,9 @@
          */
 
         /**
-         * @typedef {Object} ResumeVersion
-         * @property {string} id - 版本 ID
-         * @property {string} baseResumeId - 所属母版 ID
-         * @property {string} title - 版本标题
-         * @property {string} [targetCompany] - 目标公司
-         * @property {string} [targetRole] - 目标岗位
-         * @property {boolean} pinned - 是否置顶
-         * @property {number} sortOrder - 排序权重
-         * @property {string} createdAt - 创建时间
-         * @property {string} updatedAt - 更新时间
-         * @property {ResumeDocument} contentJson - 版本内容 JSON
-         * @property {JDAnalysis} [jdSnapshot] - JD 快照
-         * @property {string} searchText - 搜索索引
-         */
-
-        /**
          * @typedef {Object} ResumeLibraryState
-         * @property {Array<ResumeBase>} bases - 母版简历数组
-         * @property {Array<ResumeVersion>} versions - 岗位版本数组
-         * @property {string} [selectedBaseResumeId] - 当前选中的母版 ID
-         * @property {string} [selectedVersionId] - 当前选中的版本 ID
+         * @property {Array<ResumeBase>} bases - 简历数组
+         * @property {string} [selectedBaseResumeId] - 当前选中的 Base ID
          * @property {string} searchQuery - 搜索关键词
          */
 
@@ -1632,7 +1614,15 @@
                 try {
                     const data = localStorage.getItem(STORAGE_KEYS.RESUME_LIBRARY);
                     if (data) {
-                        return JSON.parse(data);
+                        const state = JSON.parse(data);
+                        // 清理旧版本的 selectedVersionId 和 versions
+                        if (state.selectedVersionId) {
+                            delete state.selectedVersionId;
+                        }
+                        if (state.versions) {
+                            delete state.versions;
+                        }
+                        return state;
                     }
                 } catch (e) {
                     console.error('[Store] 加载数据失败:', e);
@@ -1666,22 +1656,20 @@
                 const now = new Date().toISOString();
                 return {
                     bases: [],
-                    versions: [],
                     selectedBaseResumeId: undefined,
-                    selectedVersionId: undefined,
                     searchQuery: ''
                 };
             },
 
             /**
-             * 清理旧版本（当存储空间不足时）
+             * 清理旧的简历（当存储空间不足时）
              * @param {ResumeLibraryState} state
              */
             cleanupOldVersions(state) {
-                // 删除超过 30 天未更新的版本
+                // 删除超过 30 天未更新的简历
                 const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-                state.versions = state.versions.filter(v =>
-                    new Date(v.updatedAt).getTime() > thirtyDaysAgo
+                state.bases = state.bases.filter(b =>
+                    new Date(b.updatedAt).getTime() > thirtyDaysAgo
                 );
                 this.save(state);
             },
@@ -1757,23 +1745,17 @@
              */
             init() {
                 this.state = storageAdapter.load();
-                console.log('[Store] 初始化完成，加载了', this.state.bases.length, '个母版简历');
+                console.log('[Store] 初始化完成，加载了', this.state.bases.length, '个简历');
 
                 // 恢复最近打开的项
-                if (this.state.selectedVersionId) {
-                    const version = this.getVersion(this.state.selectedVersionId);
-                    if (version) {
-                        this.currentEditingDoc = JSON.parse(JSON.stringify(version.contentJson));
-                        return;
-                    }
-                } else if (this.state.selectedBaseResumeId) {
+                if (this.state.selectedBaseResumeId) {
                     const base = this.getBase(this.state.selectedBaseResumeId);
                     if (base) {
                         this.currentEditingDoc = JSON.parse(JSON.stringify(base.latestContentJson));
                         return;
                     }
                 }
-                // 如果没有选中项或选中项不存在，使用第一个母版或创建空状态
+                // 如果没有选中项或选中项不存在，使用第一个或创建空状态
                 if (this.state.bases.length > 0) {
                     const firstBase = this.state.bases[0];
                     this.state.selectedBaseResumeId = firstBase.id;
@@ -1830,88 +1812,6 @@
             },
 
             /**
-             * 获取版本
-             * @param {string} id
-             * @returns {ResumeVersion|undefined}
-             */
-            getVersion(id) {
-                return this.state.versions.find(v => v.id === id);
-            },
-
-            /**
-             * 获取某个母版下的所有版本
-             * @param {string} baseId
-             * @returns {Array<ResumeVersion>}
-             */
-            getVersionsForBase(baseId) {
-                return this.state.versions.filter(v => v.baseResumeId === baseId);
-            },
-
-            /**
-             * 创建新的母版简历
-             * @param {string} [title] - 可选标题
-             * @returns {ResumeBase}
-             */
-            createBase(title = '未命名简历') {
-                const now = new Date().toISOString();
-                const newBase = {
-                    id: 'base-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                    title: title,
-                    pinned: false,
-                    sortOrder: this.state.bases.length,
-                    createdAt: now,
-                    updatedAt: now,
-                    latestContentJson: this.createEmptyResumeDoc(),
-                    collapsed: false,
-                    searchText: title.toLowerCase()
-                };
-                this.state.bases.unshift(newBase); // 添加到开头
-                this.state.selectedBaseResumeId = newBase.id;
-                this.state.selectedVersionId = undefined;
-                this.currentEditingDoc = JSON.parse(JSON.stringify(newBase.latestContentJson));
-                this.persist();
-                return newBase;
-            },
-
-            /**
-             * 为母版创建新的岗位版本
-             * @param {string} baseId - 母版 ID
-             * @param {string} [title] - 版本标题
-             * @param {JDAnalysis} [jdSnapshot] - JD 快照
-             * @returns {ResumeVersion}
-             */
-            createVersion(baseId, title, jdSnapshot = null) {
-                const base = this.getBase(baseId);
-                if (!base) {
-                    throw new Error('母版简历不存在：' + baseId);
-                }
-
-                const now = new Date().toISOString();
-                const newVersion = {
-                    id: 'ver-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                    baseResumeId: baseId,
-                    title: title || (jdSnapshot ? jdSnapshot.companyPosition : '新岗位版本'),
-                    targetCompany: jdSnapshot?.companyPosition?.split('|')?.[0]?.trim() || '',
-                    targetRole: jdSnapshot?.companyPosition?.split('|')?.[1]?.trim() || '',
-                    pinned: false,
-                    sortOrder: this.getVersionsForBase(baseId).length,
-                    createdAt: now,
-                    updatedAt: now,
-                    contentJson: JSON.parse(JSON.stringify(base.latestContentJson)), // 复制母版内容
-                    jdSnapshot: jdSnapshot || null,
-                    searchText: storageAdapter.generateSearchText(base.latestContentJson) +
-                               ' ' + storageAdapter.generateJDSearchText(jdSnapshot)
-                };
-
-                this.state.versions.unshift(newVersion);
-                this.state.selectedVersionId = newVersion.id;
-                this.state.selectedBaseResumeId = baseId;
-                this.currentEditingDoc = JSON.parse(JSON.stringify(newVersion.contentJson));
-                this.persist();
-                return newVersion;
-            },
-
-            /**
              * 选中母版简历
              * @param {string} baseId
              */
@@ -1920,22 +1820,7 @@
                 if (!base) return;
 
                 this.state.selectedBaseResumeId = baseId;
-                this.state.selectedVersionId = undefined;
                 this.currentEditingDoc = JSON.parse(JSON.stringify(base.latestContentJson));
-                this.persist();
-            },
-
-            /**
-             * 选中岗位版本
-             * @param {string} versionId
-             */
-            selectVersion(versionId) {
-                const version = this.getVersion(versionId);
-                if (!version) return;
-
-                this.state.selectedVersionId = versionId;
-                this.state.selectedBaseResumeId = version.baseResumeId;
-                this.currentEditingDoc = JSON.parse(JSON.stringify(version.contentJson));
                 this.persist();
             },
 
@@ -1969,29 +1854,18 @@
                 // 更新搜索索引
                 const newSearchText = storageAdapter.generateSearchText(this.currentEditingDoc);
 
-                if (this.state.selectedVersionId) {
-                    // 保存岗位版本
-                    const version = this.getVersion(this.state.selectedVersionId);
-                    if (version) {
-                        version.contentJson = JSON.parse(JSON.stringify(this.currentEditingDoc));
-                        version.updatedAt = new Date().toISOString();
-                        version.searchText = newSearchText + ' ' + storageAdapter.generateJDSearchText(version.jdSnapshot);
-
-                        // 同时更新母版的 latestContentJson（岗位版本的改动也同步回母版）
-                        const base = this.getBase(version.baseResumeId);
-                        if (base) {
-                            base.latestContentJson = JSON.parse(JSON.stringify(this.currentEditingDoc));
-                            base.updatedAt = version.updatedAt;
-                            base.searchText = newSearchText;
-                        }
-                    }
-                } else if (this.state.selectedBaseResumeId) {
-                    // 保存母版简历
+                // 保存当前选中的 base
+                if (this.state.selectedBaseResumeId) {
                     const base = this.getBase(this.state.selectedBaseResumeId);
                     if (base) {
                         base.latestContentJson = JSON.parse(JSON.stringify(this.currentEditingDoc));
                         base.updatedAt = new Date().toISOString();
-                        base.searchText = newSearchText;
+                        // 如果有 JD 快照，更新搜索索引
+                        if (base.jdSnapshot) {
+                            base.searchText = newSearchText + ' ' + storageAdapter.generateJDSearchText(base.jdSnapshot);
+                        } else {
+                            base.searchText = newSearchText;
+                        }
                     }
                 }
 
@@ -2045,19 +1919,11 @@
             /**
              * 切换置顶状态
              * @param {string} baseId
-             * @param {string} [versionId]
              */
-            togglePin(baseId, versionId = null) {
-                if (versionId) {
-                    const version = this.getVersion(versionId);
-                    if (version) {
-                        version.pinned = !version.pinned;
-                    }
-                } else {
-                    const base = this.getBase(baseId);
-                    if (base) {
-                        base.pinned = !base.pinned;
-                    }
+            togglePin(baseId) {
+                const base = this.getBase(baseId);
+                if (base) {
+                    base.pinned = !base.pinned;
                 }
                 this.sortAndPersist();
             },
@@ -2077,31 +1943,42 @@
             },
 
             /**
-             * 重命名版本
-             * @param {string} versionId
-             * @param {string} newTitle
+             * 在指定类别下创建新的 base（空简历）
+             * @param {string} category - 类别名称
+             * @returns {ResumeBase}
              */
-            renameVersion(versionId, newTitle) {
-                const version = this.getVersion(versionId);
-                if (version) {
-                    version.title = newTitle;
-                    version.searchText = storageAdapter.generateSearchText(version.contentJson) +
-                                        ' ' + storageAdapter.generateJDSearchText(version.jdSnapshot) +
-                                        ' ' + newTitle.toLowerCase();
-                    this.sortAndPersist();
-                }
+            createBaseWithCategory(category) {
+                const now = new Date().toISOString();
+                const newBase = {
+                    id: 'base-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                    title: '新岗位版本',
+                    category: category,
+                    pinned: false,
+                    sortOrder: this.state.bases.length,
+                    createdAt: now,
+                    updatedAt: now,
+                    latestContentJson: this.createEmptyResumeDoc(),
+                    collapsed: false,
+                    searchText: '',
+                    // 空 JD 相关字段
+                    jdSnapshot: null,
+                    companyInfo: null,
+                    skillCards: []
+                };
+                this.state.bases.unshift(newBase);
+                this.state.selectedBaseResumeId = newBase.id;
+                this.currentEditingDoc = JSON.parse(JSON.stringify(newBase.latestContentJson));
+                this.persist();
+                return newBase;
             },
 
             /**
-             * 删除母版（连带删除所有版本）
+             * 删除母版
              * @param {string} baseId
              */
             deleteBase(baseId) {
                 const baseIndex = this.state.bases.findIndex(b => b.id === baseId);
                 if (baseIndex === -1) return;
-
-                // 删除所有关联版本
-                this.state.versions = this.state.versions.filter(v => v.baseResumeId !== baseId);
 
                 // 删除母版
                 this.state.bases.splice(baseIndex, 1);
@@ -2109,33 +1986,8 @@
                 // 如果删除的是当前选中的，清空选中状态
                 if (this.state.selectedBaseResumeId === baseId) {
                     this.state.selectedBaseResumeId = undefined;
-                    this.state.selectedVersionId = undefined;
                     this.currentEditingDoc = this.state.bases.length > 0
                         ? JSON.parse(JSON.stringify(this.state.bases[0].latestContentJson))
-                        : this.createEmptyResumeDoc();
-                }
-
-                this.sortAndPersist();
-            },
-
-            /**
-             * 删除版本
-             * @param {string} versionId
-             */
-            deleteVersion(versionId) {
-                const versionIndex = this.state.versions.findIndex(v => v.id === versionId);
-                if (versionIndex === -1) return;
-
-                const version = this.state.versions[versionIndex];
-                this.state.versions.splice(versionIndex, 1);
-
-                // 如果删除的是当前选中的，切换回母版
-                if (this.state.selectedVersionId === versionId) {
-                    this.state.selectedVersionId = undefined;
-                    this.state.selectedBaseResumeId = version.baseResumeId;
-                    const base = this.getBase(version.baseResumeId);
-                    this.currentEditingDoc = base
-                        ? JSON.parse(JSON.stringify(base.latestContentJson))
                         : this.createEmptyResumeDoc();
                 }
 
@@ -2153,16 +2005,6 @@
                     return new Date(b.updatedAt) - new Date(a.updatedAt);
                 });
 
-                // 排序每个母版下的版本
-                this.state.bases.forEach(base => {
-                    const versions = this.getVersionsForBase(base.id);
-                    versions.sort((a, b) => {
-                        if (a.pinned && !b.pinned) return -1;
-                        if (!a.pinned && b.pinned) return 1;
-                        return new Date(b.updatedAt) - new Date(a.updatedAt);
-                    });
-                });
-
                 this.persist();
             },
 
@@ -2176,15 +2018,15 @@
             /**
              * 搜索（P1 后续实现）
              * @param {string} query
-             * @returns {{bases: ResumeBase[], versions: ResumeVersion[]}}
+             * @returns {Array<ResumeBase>}
              */
             search(query) {
                 if (!query.trim()) {
-                    return { bases: this.state.bases, versions: this.state.versions };
+                    return this.state.bases;
                 }
                 const q = query.toLowerCase();
                 // TODO: 实现搜索逻辑
-                return { bases: [], versions: [] };
+                return [];
             }
         };
 
@@ -2422,7 +2264,7 @@
             const state = resumeLibraryStore.state;
             if (!state || !state.bases) return;
 
-            // 按岗位类别分组
+            // 按岗位类别分组，直接显示 base（扁平化结构）
             const categoryGroups = {};
             state.bases.forEach(base => {
                 const category = base.category || '未分类';
@@ -2452,64 +2294,31 @@
                     </div>
                 `;
 
-                // 如果类别未折叠，渲染该类别下的所有母版简历
+                // 如果类别未折叠，渲染该类别下的所有 base
                 if (!isCollapsed) {
                     bases.forEach(base => {
-                        const versions = resumeLibraryStore.getVersionsForBase(base.id);
-                        const isSelectedBase = state.selectedBaseResumeId === base.id && !state.selectedVersionId;
-
-                        html += `<div class="history-base-item" data-base-id="${base.id}" data-category="${escapeHtml(category)}">`;
+                        const isSelectedBase = state.selectedBaseResumeId === base.id;
                         html += `
-                            <div class="history-base-header ${isSelectedBase ? 'active' : ''}" data-action="select-base" data-base-id="${base.id}">
-                                <span class="history-base-toggle ${base.collapsed ? '' : 'expanded'}" data-action="toggle-collapse" data-base-id="${base.id}">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M9 18l6-6-6-6"></path>
-                                    </svg>
-                                </span>
-                                <span class="history-base-icon">📄</span>
-                                <span class="history-base-title" title="${escapeHtml(base.title)}">${escapeHtml(base.title)}</span>
-                                <div class="history-base-actions">
-                                    ${base.pinned ? `<svg class="history-base-pin active" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5M5 17h14M12 2l3 5h-6l3-5z"/></svg>` : ''}
-                                    <svg class="history-base-more" data-action="show-menu" data-base-id="${base.id}" viewBox="0 0 24 24" fill="currentColor">
-                                        <circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>
-                                    </svg>
-                                </div>
+                            <div class="history-version-item ${isSelectedBase ? 'active' : ''}" data-action="select-base" data-base-id="${base.id}">
+                                <span class="history-version-icon">📋</span>
+                                <span class="history-version-title" title="${escapeHtml(base.title)}">${escapeHtml(base.title)}</span>
+                                ${base.pinned ? '<svg class="history-base-pin active" style="width:12px;height:12px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5M5 17h14M12 2l3 5h-6l3-5z"/></svg>' : ''}
+                                <svg class="history-base-more" style="width:14px;height:14px;padding:1px;" data-action="show-base-menu" data-base-id="${base.id}" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>
+                                </svg>
                             </div>
                         `;
-
-                        // 子版本列表（展开时显示）
-                        if (!base.collapsed) {
-                            html += `<div class="history-versions-container">`;
-
-                            versions.forEach(version => {
-                                const isSelectedVersion = state.selectedVersionId === version.id;
-                                html += `
-                                    <div class="history-version-item ${isSelectedVersion ? 'active' : ''}" data-action="select-version" data-version-id="${version.id}">
-                                        <span class="history-version-icon">📋</span>
-                                        <span class="history-version-title" title="${escapeHtml(version.title)}">${escapeHtml(version.title)}</span>
-                                        ${version.pinned ? '<svg class="history-base-pin active" style="width:12px;height:12px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5M5 17h14M12 2l3 5h-6l3-5z"/></svg>' : ''}
-                                        <svg class="history-base-more" style="width:14px;height:14px;padding:1px;" data-action="show-version-menu" data-version-id="${version.id}" viewBox="0 0 24 24" fill="currentColor">
-                                            <circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>
-                                        </svg>
-                                    </div>
-                                `;
-                            });
-
-                            // 新建版本按钮
-                            html += `
-                                <div class="history-version-add" data-action="add-version" data-base-id="${base.id}">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    新建岗位版本
-                                </div>
-                            `;
-
-                            html += `</div>`; // end history-versions-container
-                        }
-
-                        html += `</div>`; // end history-base-item
                     });
+
+                    // 新建岗位版本按钮（放在类别末尾）
+                    html += `
+                        <div class="history-version-add" data-action="add-base-to-category" data-category="${escapeHtml(category)}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <path d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            新建岗位版本
+                        </div>
+                    `;
                 }
             });
 
@@ -2531,10 +2340,10 @@
         }
 
         /**
-         * 绑定左侧列表事件
+         * 绑定左侧列表事件（扁平化结构）
          */
         function bindHistoryListEvents() {
-            // 点击母版简历
+            // 点击 base（岗位版本）
             document.querySelectorAll('[data-action="select-base"]').forEach(el => {
                 el.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -2542,17 +2351,7 @@
                     resumeLibraryStore.selectBase(baseId);
                     renderHistoryList();
                     loadResumeToCanvas(resumeLibraryStore.currentEditingDoc);
-                    updateJdPanelForBase();
-                });
-            });
-
-            // 点击展开/折叠
-            document.querySelectorAll('[data-action="toggle-collapse"]').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const baseId = el.dataset.baseId;
-                    resumeLibraryStore.toggleBaseCollapsed(baseId);
-                    renderHistoryList();
+                    updateJdPanelForVersion(resumeLibraryStore.getBase(baseId));
                 });
             });
 
@@ -2566,43 +2365,23 @@
                 });
             });
 
-            // 点击岗位版本
-            document.querySelectorAll('[data-action="select-version"]').forEach(el => {
-                el.addEventListener('click', () => {
-                    const versionId = el.dataset.versionId;
-                    resumeLibraryStore.selectVersion(versionId);
-                    renderHistoryList();
-                    loadResumeToCanvas(resumeLibraryStore.currentEditingDoc);
-                    const version = resumeLibraryStore.getVersion(versionId);
-                    updateJdPanelForVersion(version);
-                });
-            });
-
-            // 新建岗位版本
-            document.querySelectorAll('[data-action="add-version"]').forEach(el => {
+            // 新建岗位版本（在指定类别下创建空 base）
+            document.querySelectorAll('[data-action="add-base-to-category"]').forEach(el => {
                 el.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const baseId = el.dataset.baseId;
-                    resumeLibraryStore.createVersion(baseId, '新岗位版本');
+                    const category = el.dataset.category;
+                    resumeLibraryStore.createBaseWithCategory(category);
                     renderHistoryList();
                     loadResumeToCanvas(resumeLibraryStore.currentEditingDoc);
-                    updateJdPanelForVersion(resumeLibraryStore.getVersion(resumeLibraryStore.state.selectedVersionId));
+                    updateJdPanelForBase();
                 });
             });
 
-            // 三点菜单（母版简历）
-            document.querySelectorAll('[data-action="show-menu"]').forEach(el => {
+            // 三点菜单（base）
+            document.querySelectorAll('[data-action="show-base-menu"]').forEach(el => {
                 el.addEventListener('click', (e) => {
                     e.stopPropagation();
                     showContextMenu(e, el.dataset.baseId, 'base');
-                });
-            });
-
-            // 三点菜单（岗位版本）
-            document.querySelectorAll('[data-action="show-version-menu"]').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showContextMenu(e, el.dataset.versionId, 'version');
                 });
             });
         }
@@ -2611,7 +2390,6 @@
          * 显示上下文菜单
          */
         let contextMenuTargetId = null;
-        let contextMenuType = null; // 'base' or 'version'
 
         function showContextMenu(e, targetId, type) {
             e.stopPropagation();
@@ -2619,7 +2397,6 @@
             if (!menu) return;
 
             contextMenuTargetId = targetId;
-            contextMenuType = type;
 
             const rect = e.target.getBoundingClientRect();
             menu.style.display = 'block';
@@ -2646,66 +2423,34 @@
             renameBtn.onclick = null;
             deleteBtn.onclick = null;
 
-            if (contextMenuType === 'base') {
-                const base = resumeLibraryStore.getBase(contextMenuTargetId);
-                if (base) {
-                    pinText.textContent = base.pinned ? '取消置顶' : '置顶';
-                    renameText.textContent = '重命名';
-                    deleteText.textContent = '删除';
+            const base = resumeLibraryStore.getBase(contextMenuTargetId);
+            if (base) {
+                pinText.textContent = base.pinned ? '取消置顶' : '置顶';
+                renameText.textContent = '重命名';
+                deleteText.textContent = '删除';
 
-                    pinBtn.onclick = () => {
-                        resumeLibraryStore.togglePin(contextMenuTargetId);
+                pinBtn.onclick = () => {
+                    resumeLibraryStore.togglePin(contextMenuTargetId);
+                    renderHistoryList();
+                    menu.style.display = 'none';
+                };
+
+                renameBtn.onclick = () => {
+                    const newTitle = prompt('重命名简历:', base.title);
+                    if (newTitle && newTitle.trim()) {
+                        resumeLibraryStore.renameBase(contextMenuTargetId, newTitle.trim());
                         renderHistoryList();
-                        menu.style.display = 'none';
-                    };
+                    }
+                    menu.style.display = 'none';
+                };
 
-                    renameBtn.onclick = () => {
-                        const newTitle = prompt('重命名简历:', base.title);
-                        if (newTitle && newTitle.trim()) {
-                            resumeLibraryStore.renameBase(contextMenuTargetId, newTitle.trim());
-                            renderHistoryList();
-                        }
-                        menu.style.display = 'none';
-                    };
-
-                    deleteBtn.onclick = () => {
-                        if (confirm('确定要删除这份简历吗？这将同时删除其所有岗位版本。')) {
-                            resumeLibraryStore.deleteBase(contextMenuTargetId);
-                            renderHistoryList();
-                        }
-                        menu.style.display = 'none';
-                    };
-                }
-            } else if (contextMenuType === 'version') {
-                const version = resumeLibraryStore.getVersion(contextMenuTargetId);
-                if (version) {
-                    pinText.textContent = version.pinned ? '取消置顶' : '置顶';
-                    renameText.textContent = '重命名';
-                    deleteText.textContent = '删除';
-
-                    pinBtn.onclick = () => {
-                        resumeLibraryStore.togglePin(version.baseResumeId, contextMenuTargetId);
+                deleteBtn.onclick = () => {
+                    if (confirm('确定要删除这份简历吗？')) {
+                        resumeLibraryStore.deleteBase(contextMenuTargetId);
                         renderHistoryList();
-                        menu.style.display = 'none';
-                    };
-
-                    renameBtn.onclick = () => {
-                        const newTitle = prompt('重命名岗位版本:', version.title);
-                        if (newTitle && newTitle.trim()) {
-                            resumeLibraryStore.renameVersion(contextMenuTargetId, newTitle.trim());
-                            renderHistoryList();
-                        }
-                        menu.style.display = 'none';
-                    };
-
-                    deleteBtn.onclick = () => {
-                        if (confirm('确定要删除这个岗位版本吗？')) {
-                            resumeLibraryStore.deleteVersion(contextMenuTargetId);
-                            renderHistoryList();
-                        }
-                        menu.style.display = 'none';
-                    };
-                }
+                    }
+                    menu.style.display = 'none';
+                };
             }
         }
 
@@ -2894,22 +2639,15 @@
             const state = resumeLibraryStore.state;
             let jdSnapshot = null;
 
-            // 优先从岗位版本读取 JD 快照
-            if (state.selectedVersionId) {
-                const version = resumeLibraryStore.getVersion(state.selectedVersionId);
-                if (version && version.jdSnapshot) {
-                    jdSnapshot = version.jdSnapshot;
-                    console.log('[恢复] 从岗位版本恢复 JD 信息:', jdSnapshot.companyPosition);
-                }
-            }
-            // 否则从母版简历读取
-            else if (state.selectedBaseResumeId) {
+            // 从当前选中的 base 读取 JD 快照
+            if (state.selectedBaseResumeId) {
                 const base = resumeLibraryStore.getBase(state.selectedBaseResumeId);
                 if (base && base.jdSnapshot) {
                     jdSnapshot = base.jdSnapshot;
-                    console.log('[恢复] 从母版简历恢复 JD 信息:', jdSnapshot.companyPosition);
+                    console.log('[恢复] 从 base 恢复 JD 信息:', jdSnapshot.companyPosition);
                 }
             }
+
             // 最后尝试全局变量
             if (!jdSnapshot && window.currentJDAnalysis) {
                 jdSnapshot = window.currentJDAnalysis;
@@ -3151,10 +2889,10 @@
         }
 
         /**
-         * 更新 JD 面板为岗位版本模式
-         * @param {ResumeVersion} version
+         * 更新 JD 面板为岗位版本模式（从 base 读取）
+         * @param {ResumeBase} base
          */
-        function updateJdPanelForVersion(version) {
+        function updateJdPanelForVersion(base) {
             const jdPanelCompany = document.getElementById('jd-panel-company');
             const jdPanelDesc = document.getElementById('jd-panel-desc');
             const jdDragSource = document.getElementById('jd-drag-source');
@@ -3162,10 +2900,10 @@
             const jdDragDesc = document.getElementById('jd-drag-desc');
 
             if (jdPanelCompany) {
-                jdPanelCompany.textContent = version?.jdSnapshot?.companyPosition || (version?.title ?? '岗位定制版');
+                jdPanelCompany.textContent = base?.jdSnapshot?.companyPosition || (base?.title ?? '岗位定制版');
             }
             if (jdPanelDesc) {
-                jdPanelDesc.textContent = version?.jdSnapshot?.summary || '支持拖拽左侧核心要求卡片到简历进行 AI 改写。';
+                jdPanelDesc.textContent = base?.jdSnapshot?.summary || '支持拖拽左侧核心要求卡片到简历进行 AI 改写。';
             }
 
             // 显示 JD 拖拽卡片
@@ -3174,20 +2912,20 @@
             }
 
             // 更新拖拽卡片内容并恢复 JD 卡片
-            if (version?.jdSnapshot) {
-                window.currentJDData = version.jdSnapshot;
+            if (base?.jdSnapshot) {
+                window.currentJDData = base.jdSnapshot;
                 if (jdDragTitle) {
                     jdDragTitle.textContent = '✨ 核心要求';
                 }
-                if (jdDragDesc && version.jdSnapshot.tagTitle) {
-                    jdDragDesc.textContent = version.jdSnapshot.tagTitle;
-                } else if (jdDragDesc && version.jdSnapshot.mustHave?.length > 0) {
-                    jdDragDesc.textContent = version.jdSnapshot.mustHave[0];
+                if (jdDragDesc && base.jdSnapshot.tagTitle) {
+                    jdDragDesc.textContent = base.jdSnapshot.tagTitle;
+                } else if (jdDragDesc && base.jdSnapshot.mustHave?.length > 0) {
+                    jdDragDesc.textContent = base.jdSnapshot.mustHave[0];
                 }
 
                 // 恢复 JD 卡片到素材区
-                if (version.jdSnapshot.keyRequirements && version.jdSnapshot.keyRequirements.length > 0) {
-                    renderJdCards(version.jdSnapshot.keyRequirements);
+                if (base.jdSnapshot.keyRequirements && base.jdSnapshot.keyRequirements.length > 0) {
+                    renderJdCards(base.jdSnapshot.keyRequirements);
                 }
             } else {
                 window.currentJDData = null;
@@ -4185,79 +3923,75 @@
         }
 
         /**
-         * 保存 JD 分析结果到 Store
+         * 保存 JD 分析结果到 Store（扁平化结构）
          * @param {Object} jdData - JD 分析结果
          */
         function saveJdAnalysisToStore(jdData) {
             if (!resumeLibraryStore.currentEditingDoc) return;
 
-            // 构建 JD 快照对象（根据后端 API 返回的实际数据结构）
+            // 构建 JD 快照对象
             const jdSnapshot = {
                 companyPosition: jdData.companyInfo ? `${jdData.companyInfo.companyName} | ${jdData.companyInfo.position}` : '',
                 summary: jdData.companyInfo?.description || '',
                 tagTitle: jdData.keyRequirements?.[0]?.title || '',
                 tagDesc: jdData.keyRequirements?.[0]?.description || '',
-                coreDuties: [], // 后端未返回，留空
+                coreDuties: [],
                 mustHave: jdData.keyRequirements?.filter(r => r.priority === 'high')?.map(r => r.description) || [],
                 niceToHave: jdData.keyRequirements?.filter(r => r.priority === 'low')?.map(r => r.description) || [],
-                domainKeywords: [], // 后端未返回，留空
-                hiddenSkills: [], // 后端未返回，留空
-                keyRequirements: jdData.keyRequirements || [] // 保留完整要求数组用于渲染卡片
+                domainKeywords: [],
+                hiddenSkills: [],
+                keyRequirements: jdData.keyRequirements || []
             };
 
-            // 从当前简历中提取技能卡片数据（保存到母版简历）
+            // 从当前简历中提取技能卡片数据
             const skillCardsData = extractSkillCardsFromCurrentDoc();
 
-            // 从 JD 中提取岗位类别（用于自动归类）
+            // 从 JD 中提取岗位类别
             const jobCategory = extractJobCategoryFromJd(jdData);
 
-            // 如果有选中的岗位版本，保存到版本
-            if (resumeLibraryStore.state.selectedVersionId) {
-                const version = resumeLibraryStore.getVersion(resumeLibraryStore.state.selectedVersionId);
-                if (version) {
-                    version.jdSnapshot = jdSnapshot;
-                    // 命名格式：公司名 | 岗位名（如"美团 | 数据产品经理"）
-                    version.title = jdSnapshot.companyPosition || version.title;
-                    version.updatedAt = new Date().toISOString();
+            const base = resumeLibraryStore.getBase(resumeLibraryStore.state.selectedBaseResumeId);
+            if (!base) return;
 
-                    // 保存技能卡片到母版简历
-                    const base = resumeLibraryStore.getBase(version.baseResumeId);
-                    if (base) {
-                        base.skillCards = skillCardsData;
-                        base.category = jobCategory; // 保存岗位类别
-                        base.updatedAt = new Date().toISOString();
-                    }
-
-                    resumeLibraryStore.persist();
-                    console.log('[JD 保存] 已保存到岗位版本:', version.id);
-
-                    // 重新渲染左侧列表，同步显示更新后的标题
-                    renderHistoryList();
-                }
+            // 如果当前 base 还没有 JD，直接更新这个 base
+            if (!base.jdSnapshot) {
+                base.jdSnapshot = jdSnapshot;
+                base.companyInfo = jdData.companyInfo;
+                base.title = jdSnapshot.companyPosition || base.title;
+                base.skillCards = skillCardsData;
+                base.category = jobCategory;
+                base.updatedAt = new Date().toISOString();
+                resumeLibraryStore.persist();
+                console.log('[JD 保存] 已更新 base:', base.id);
             }
-            // 否则自动创建岗位版本
+            // 如果当前 base 已有 JD，创建新 base（复制 doc 和 skillCards）
             else {
-                const base = resumeLibraryStore.getBase(resumeLibraryStore.state.selectedBaseResumeId);
-                if (base) {
-                    // 创建岗位版本
-                    const versionTitle = jdSnapshot.companyPosition || '新岗位版本';
-                    const newVersion = resumeLibraryStore.createVersion(base.id, versionTitle, jdSnapshot);
-
-                    // 保存技能卡片到母版简历
-                    base.skillCards = skillCardsData;
-                    base.category = jobCategory; // 保存岗位类别
-                    base.updatedAt = new Date().toISOString();
-
-                    resumeLibraryStore.persist();
-                    console.log('[JD 保存] 已创建岗位版本:', newVersion.id);
-
-                    // 重新渲染左侧列表
-                    renderHistoryList();
-                }
-
-                // 同时缓存到全局变量
-                window.currentJDAnalysis = jdSnapshot;
+                const newBase = {
+                    ...base,
+                    id: 'base-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                    title: jdSnapshot.companyPosition || '新岗位版本',
+                    jdSnapshot: jdSnapshot,
+                    companyInfo: jdData.companyInfo,
+                    skillCards: JSON.parse(JSON.stringify(skillCardsData)), // 深拷贝技能卡片
+                    latestContentJson: JSON.parse(JSON.stringify(base.latestContentJson)), // 深拷贝简历内容
+                    category: jobCategory,
+                    pinned: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    collapsed: false,
+                    sortOrder: resumeLibraryStore.state.bases.length
+                };
+                resumeLibraryStore.state.bases.push(newBase);
+                resumeLibraryStore.state.selectedBaseResumeId = newBase.id;
+                resumeLibraryStore.currentEditingDoc = JSON.parse(JSON.stringify(newBase.latestContentJson));
+                resumeLibraryStore.persist();
+                console.log('[JD 保存] 已创建新 base:', newBase.id);
             }
+
+            // 缓存到全局变量
+            window.currentJDAnalysis = jdSnapshot;
+
+            // 重新渲染左侧列表
+            renderHistoryList();
         }
 
         /**
@@ -6369,7 +6103,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             // 初始化简历库 Store
             resumeLibraryStore.init();
-            console.log('[初始化] 简历库已加载，当前有', resumeLibraryStore.state.bases.length, '个母版简历');
+            console.log('[初始化] 简历库已加载，当前有', resumeLibraryStore.state.bases.length, '个简历');
 
             // 渲染左侧列表
             renderHistoryList();
@@ -6378,12 +6112,7 @@
             loadResumeToCanvas(resumeLibraryStore.currentEditingDoc);
 
             // 更新 JD 面板状态
-            if (resumeLibraryStore.state.selectedVersionId) {
-                const version = resumeLibraryStore.getVersion(resumeLibraryStore.state.selectedVersionId);
-                updateJdPanelForVersion(version);
-            } else {
-                updateJdPanelForBase();
-            }
+            updateJdPanelForBase();
 
             initStyleEditMode();
             setupCanvasSelection();
