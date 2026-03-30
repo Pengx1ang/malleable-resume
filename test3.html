@@ -1071,6 +1071,129 @@
         }
 
         /* ═══════════════════════════════════════════════════════════
+           🧩 组件样式库 - Component Library
+           ═══════════════════════════════════════════════════════════ */
+
+        /* --- 按钮组件 --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-2);
+            padding: var(--spacing-2) var(--spacing-4);
+            font-size: var(--text-base);
+            font-weight: var(--font-medium);
+            line-height: 1;
+            border-radius: var(--radius-lg);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            white-space: nowrap;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        /* 主要按钮 */
+        .btn-primary {
+            background-color: var(--color-primary-600);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-primary-700);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: var(--shadow-xs);
+        }
+        /* 次要按钮 */
+        .btn-secondary {
+            background-color: white;
+            color: var(--color-neutral-700);
+            border-color: var(--color-neutral-300);
+            box-shadow: var(--shadow-xs);
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--color-neutral-50);
+            border-color: var(--color-neutral-400);
+            box-shadow: var(--shadow-sm);
+        }
+        /* 幽灵按钮 */
+        .btn-ghost {
+            background-color: transparent;
+            color: var(--color-neutral-600);
+        }
+        .btn-ghost:hover:not(:disabled) {
+            background-color: var(--color-neutral-100);
+            color: var(--color-neutral-900);
+        }
+        /* 尺寸变体 */
+        .btn-sm {
+            padding: var(--spacing-1) var(--spacing-2);
+            font-size: var(--text-sm);
+            border-radius: var(--radius-md);
+        }
+        .btn-lg {
+            padding: var(--spacing-3) var(--spacing-6);
+            font-size: var(--text-lg);
+            border-radius: var(--radius-xl);
+        }
+
+        /* --- 卡片组件 --- */
+        .card {
+            background: white;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--color-neutral-200);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-base);
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-neutral-300);
+        }
+        .card-hover {
+            cursor: pointer;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* --- 输入框组件 --- */
+        .input {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-2) var(--spacing-3);
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            color: var(--color-neutral-900);
+            background-color: white;
+            border: 1px solid var(--color-neutral-300);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-fast);
+        }
+        .input::placeholder {
+            color: var(--color-neutral-400);
+        }
+        .input:hover:not(:disabled):not(:focus) {
+            border-color: var(--color-neutral-400);
+        }
+        .input:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 3px var(--color-primary-100);
+        }
+        .input:disabled {
+            background-color: var(--color-neutral-100);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* ═══════════════════════════════════════════════════════════
            🎨 Theme Engine — 三主题切换系统
            Claude（默认）/ Retro Mac（复古像素）/ 梦幻盲盒（手绘马卡龙）
            ═══════════════════════════════════════════════════════════ */
