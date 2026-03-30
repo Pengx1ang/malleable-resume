@@ -842,6 +842,10 @@
         body.style-edit-mode #jd-panel {
             display: none;
         }
+        body.style-edit-mode #left-sidebar {
+            width: 300px !important;
+            min-width: 300px !important;
+        }
         body.style-edit-mode #right-panel {
             width: 320px !important;
             min-width: 320px !important;
@@ -6992,7 +6996,6 @@
         function performExitStyleEditMode() {
             isStyleEditMode = false;
             document.body.classList.remove('style-edit-mode');
-            document.body.classList.add('preview-mode'); // 进入预览模式
 
             // 切换右侧面板 class
             const rightPanel = document.getElementById('right-panel');
@@ -7013,8 +7016,8 @@
             // 清除选中状态
             clearElementSelection();
 
-            // 更新缩放（预览模式下也完整显示 A4 纸）
-            setTimeout(() => updateScale(), 100);
+            // 更新缩放（退出样式编辑模式后恢复正常大小）
+            updateScale();
         }
 
         // 放弃修改并退出
