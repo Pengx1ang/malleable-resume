@@ -38,6 +38,51 @@
         .history-base-item {
             margin-bottom: 2px;
         }
+        /* 类别分组标题 */
+        .history-category-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            margin-top: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            background-color: #f8fafc;
+        }
+        .history-category-header:hover {
+            background-color: #f1f5f9;
+        }
+        .history-category-toggle {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            transition: transform 0.2s;
+        }
+        .history-category-toggle.expanded {
+            transform: rotate(90deg);
+        }
+        .history-category-icon {
+            font-size: 14px;
+        }
+        .history-category-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .history-category-count {
+            font-size: 10px;
+            color: #94a3b8;
+            background-color: #e2e8f0;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
         .history-base-header {
             display: flex;
             align-items: center;
@@ -1519,11 +1564,13 @@
          * @typedef {Object} ResumeBase
          * @property {string} id - 母版 ID
          * @property {string} title - 母版标题
+         * @property {string} [category] - 岗位类别（如"产品经理"、"前端开发"）
          * @property {boolean} pinned - 是否置顶
          * @property {number} sortOrder - 排序权重
          * @property {string} createdAt - 创建时间
          * @property {string} updatedAt - 更新时间
          * @property {ResumeDocument} latestContentJson - 最新内容 JSON
+         * @property {Array<Object>} [skillCards] - 技能卡片数据
          * @property {boolean} collapsed - 是否折叠子版本
          * @property {string} searchText - 搜索索引
          */
@@ -1962,6 +2009,26 @@
             },
 
             /**
+             * 切换类别折叠状态
+             * @param {string} category - 类别名称
+             */
+            toggleCategoryCollapsed(category) {
+                const categoryState = this.state.collapsedCategories || {};
+                categoryState[category] = !categoryState[category];
+                this.state.collapsedCategories = categoryState;
+                this.persist();
+            },
+
+            /**
+             * 检查类别是否折叠
+             * @param {string} category - 类别名称
+             * @returns {boolean}
+             */
+            isCategoryCollapsed(category) {
+                return (this.state.collapsedCategories || {})[category] === true;
+            },
+
+            /**
              * 切换置顶状态
              * @param {string} baseId
              * @param {string} [versionId]
@@ -2332,7 +2399,7 @@
         // ═══════════════════════════════════════════════════════════
 
         /**
-         * 渲染左侧简历列表
+         * 渲染左侧简历列表（按岗位类别分组）
          */
         function renderHistoryList() {
             const container = document.getElementById('history-container');
@@ -2341,65 +2408,95 @@
             const state = resumeLibraryStore.state;
             if (!state || !state.bases) return;
 
+            // 按岗位类别分组
+            const categoryGroups = {};
+            state.bases.forEach(base => {
+                const category = base.category || '未分类';
+                if (!categoryGroups[category]) {
+                    categoryGroups[category] = [];
+                }
+                categoryGroups[category].push(base);
+            });
+
             let html = '';
 
-            state.bases.forEach(base => {
-                const versions = resumeLibraryStore.getVersionsForBase(base.id);
-                const isSelectedBase = state.selectedBaseResumeId === base.id && !state.selectedVersionId;
-                const isActive = base.collapsed ? 'collapsed' : '';
+            // 按类别渲染
+            Object.entries(categoryGroups).forEach(([category, bases]) => {
+                const isCollapsed = resumeLibraryStore.isCategoryCollapsed(category);
 
-                // 母版简历项
-                html += `<div class="history-base-item" data-base-id="${base.id}">`;
+                // 类别标题
                 html += `
-                    <div class="history-base-header ${isSelectedBase ? 'active' : ''}" data-action="select-base" data-base-id="${base.id}">
-                        <span class="history-base-toggle ${base.collapsed ? '' : 'expanded'}" data-action="toggle-collapse" data-base-id="${base.id}">
+                    <div class="history-category-header" data-category="${escapeHtml(category)}">
+                        <span class="history-category-toggle ${isCollapsed ? '' : 'expanded'}" data-action="toggle-category" data-category="${escapeHtml(category)}">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                 <path d="M9 18l6-6-6-6"></path>
                             </svg>
                         </span>
-                        <span class="history-base-icon">📄</span>
-                        <span class="history-base-title" title="${escapeHtml(base.title)}">${escapeHtml(base.title)}</span>
-                        <div class="history-base-actions">
-                            ${base.pinned ? `<svg class="history-base-pin active" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5M5 17h14M12 2l3 5h-6l3-5z"/></svg>` : ''}
-                            <svg class="history-base-more" data-action="show-menu" data-base-id="${base.id}" viewBox="0 0 24 24" fill="currentColor">
-                                <circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>
-                            </svg>
-                        </div>
+                        <span class="history-category-icon">📁</span>
+                        <span class="history-category-title">${escapeHtml(category)}</span>
+                        <span class="history-category-count">${bases.length}</span>
                     </div>
                 `;
 
-                // 子版本列表（展开时显示）
-                if (!base.collapsed) {
-                    html += `<div class="history-versions-container">`;
+                // 如果类别未折叠，渲染该类别下的所有母版简历
+                if (!isCollapsed) {
+                    bases.forEach(base => {
+                        const versions = resumeLibraryStore.getVersionsForBase(base.id);
+                        const isSelectedBase = state.selectedBaseResumeId === base.id && !state.selectedVersionId;
 
-                    versions.forEach(version => {
-                        const isSelectedVersion = state.selectedVersionId === version.id;
+                        html += `<div class="history-base-item" data-base-id="${base.id}" data-category="${escapeHtml(category)}">`;
                         html += `
-                            <div class="history-version-item ${isSelectedVersion ? 'active' : ''}" data-action="select-version" data-version-id="${version.id}">
-                                <span class="history-version-icon">📋</span>
-                                <span class="history-version-title" title="${escapeHtml(version.title)}">${escapeHtml(version.title)}</span>
-                                ${version.pinned ? '<svg class="history-base-pin active" style="width:12px;height:12px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5M5 17h14M12 2l3 5h-6l3-5z"/></svg>' : ''}
-                                <svg class="history-base-more" style="width:14px;height:14px;padding:1px;" data-action="show-version-menu" data-version-id="${version.id}" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>
-                                </svg>
+                            <div class="history-base-header ${isSelectedBase ? 'active' : ''}" data-action="select-base" data-base-id="${base.id}">
+                                <span class="history-base-toggle ${base.collapsed ? '' : 'expanded'}" data-action="toggle-collapse" data-base-id="${base.id}">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <path d="M9 18l6-6-6-6"></path>
+                                    </svg>
+                                </span>
+                                <span class="history-base-icon">📄</span>
+                                <span class="history-base-title" title="${escapeHtml(base.title)}">${escapeHtml(base.title)}</span>
+                                <div class="history-base-actions">
+                                    ${base.pinned ? `<svg class="history-base-pin active" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5M5 17h14M12 2l3 5h-6l3-5z"/></svg>` : ''}
+                                    <svg class="history-base-more" data-action="show-menu" data-base-id="${base.id}" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>
+                                    </svg>
+                                </div>
                             </div>
                         `;
+
+                        // 子版本列表（展开时显示）
+                        if (!base.collapsed) {
+                            html += `<div class="history-versions-container">`;
+
+                            versions.forEach(version => {
+                                const isSelectedVersion = state.selectedVersionId === version.id;
+                                html += `
+                                    <div class="history-version-item ${isSelectedVersion ? 'active' : ''}" data-action="select-version" data-version-id="${version.id}">
+                                        <span class="history-version-icon">📋</span>
+                                        <span class="history-version-title" title="${escapeHtml(version.title)}">${escapeHtml(version.title)}</span>
+                                        ${version.pinned ? '<svg class="history-base-pin active" style="width:12px;height:12px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5M5 17h14M12 2l3 5h-6l3-5z"/></svg>' : ''}
+                                        <svg class="history-base-more" style="width:14px;height:14px;padding:1px;" data-action="show-version-menu" data-version-id="${version.id}" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>
+                                        </svg>
+                                    </div>
+                                `;
+                            });
+
+                            // 新建版本按钮
+                            html += `
+                                <div class="history-version-add" data-action="add-version" data-base-id="${base.id}">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <path d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    新建岗位版本
+                                </div>
+                            `;
+
+                            html += `</div>`; // end history-versions-container
+                        }
+
+                        html += `</div>`; // end history-base-item
                     });
-
-                    // 新建版本按钮
-                    html += `
-                        <div class="history-version-add" data-action="add-version" data-base-id="${base.id}">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                <path d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            新建岗位版本
-                        </div>
-                    `;
-
-                    html += `</div>`; // end history-versions-container
                 }
-
-                html += `</div>`; // end history-base-item
             });
 
             // 空状态
@@ -2441,6 +2538,16 @@
                     e.stopPropagation();
                     const baseId = el.dataset.baseId;
                     resumeLibraryStore.toggleBaseCollapsed(baseId);
+                    renderHistoryList();
+                });
+            });
+
+            // 点击类别展开/折叠
+            document.querySelectorAll('[data-action="toggle-category"]').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const category = el.dataset.category;
+                    resumeLibraryStore.toggleCategoryCollapsed(category);
                     renderHistoryList();
                 });
             });
@@ -2729,8 +2836,88 @@
             // 绑定内容变更监听（用于自动保存）
             bindCanvasAutoSave();
 
-            // 渲染技能卡片到素材区
-            renderSkillCards([]);
+            // 恢复技能卡片（从母版简历或当前文档）
+            restoreSkillCards();
+
+            // 恢复 JD 信息（公司信息、核心要求）
+            restoreJdInfo();
+        }
+
+        /**
+         * 恢复技能卡片到素材区
+         */
+        function restoreSkillCards() {
+            const state = resumeLibraryStore.state;
+            let skillCardsData = null;
+
+            // 优先从母版简历读取技能卡片
+            if (state.selectedBaseResumeId) {
+                const base = resumeLibraryStore.getBase(state.selectedBaseResumeId);
+                if (base && base.skillCards && base.skillCards.length > 0) {
+                    skillCardsData = base.skillCards;
+                    console.log('[恢复] 从母版简历恢复技能卡片:', skillCardsData.length, '个');
+                }
+            }
+
+            // 如果母版没有，尝试从当前文档提取
+            if (!skillCardsData || skillCardsData.length === 0) {
+                skillCardsData = extractSkillCardsFromCurrentDoc();
+                if (skillCardsData.length > 0) {
+                    console.log('[恢复] 从当前文档提取技能卡片:', skillCardsData.length, '个');
+                }
+            }
+
+            // 渲染技能卡片
+            if (skillCardsData && skillCardsData.length > 0) {
+                renderSkillCards(skillCardsData);
+            }
+        }
+
+        /**
+         * 恢复 JD 信息（公司信息、核心要求）到素材区
+         */
+        function restoreJdInfo() {
+            const state = resumeLibraryStore.state;
+            let jdSnapshot = null;
+
+            // 优先从岗位版本读取 JD 快照
+            if (state.selectedVersionId) {
+                const version = resumeLibraryStore.getVersion(state.selectedVersionId);
+                if (version && version.jdSnapshot) {
+                    jdSnapshot = version.jdSnapshot;
+                    console.log('[恢复] 从岗位版本恢复 JD 信息:', jdSnapshot.companyPosition);
+                }
+            }
+            // 否则从母版简历读取
+            else if (state.selectedBaseResumeId) {
+                const base = resumeLibraryStore.getBase(state.selectedBaseResumeId);
+                if (base && base.jdSnapshot) {
+                    jdSnapshot = base.jdSnapshot;
+                    console.log('[恢复] 从母版简历恢复 JD 信息:', jdSnapshot.companyPosition);
+                }
+            }
+            // 最后尝试全局变量
+            if (!jdSnapshot && window.currentJDAnalysis) {
+                jdSnapshot = window.currentJDAnalysis;
+                console.log('[恢复] 从全局变量恢复 JD 信息');
+            }
+
+            // 更新左上角公司信息
+            if (jdSnapshot && jdSnapshot.companyPosition) {
+                const jdPanelCompany = document.getElementById('jd-panel-company');
+                const jdPanelDesc = document.getElementById('jd-panel-desc');
+                if (jdPanelCompany) {
+                    jdPanelCompany.textContent = jdSnapshot.companyPosition;
+                }
+                if (jdPanelDesc && jdSnapshot.summary) {
+                    jdPanelDesc.textContent = jdSnapshot.summary;
+                }
+            }
+
+            // 渲染 JD 核心要求卡片
+            if (jdSnapshot && jdSnapshot.keyRequirements && jdSnapshot.keyRequirements.length > 0) {
+                renderJdCards(jdSnapshot.keyRequirements);
+            }
         }
 
         // 拖拽手柄 SVG（全局常量）
@@ -3905,9 +4092,11 @@
             // 关闭模态框
             jdModal.classList.add('hidden');
 
-            // 显示进度遮罩层
+            // 显示进度遮罩层 - 轻微模糊简历内容
             parsingOverlay.classList.remove('hidden');
-            resumeContent.classList.add('hidden');
+            // 不隐藏简历内容，只添加模糊效果
+            resumeContent.style.filter = 'blur(4px)';
+            resumeContent.style.pointerEvents = 'none';
             updateParsingProgress(0, '正在分析 JD...', '提取核心要求');
             document.getElementById('parsing-time').innerText = '';
 
@@ -3950,20 +4139,23 @@
 
                     setTimeout(() => {
                         parsingOverlay.classList.add('hidden');
-                        resumeContent.classList.remove('hidden');
+                        resumeContent.style.filter = '';
+                        resumeContent.style.pointerEvents = '';
                     }, 500);
                 } else {
                     clearInterval(jdTimerInterval);
                     appendMessage(`❌ <strong>分析失败</strong><br>${result.message || '无法从 JD 中提取核心要求'}`, false);
                     parsingOverlay.classList.add('hidden');
-                    resumeContent.classList.remove('hidden');
+                    resumeContent.style.filter = '';
+                    resumeContent.style.pointerEvents = '';
                 }
             } catch (error) {
                 console.error('JD analyze error:', error);
                 clearInterval(jdTimerInterval);
                 appendMessage(`❌ <strong>分析失败</strong><br>${error.message}`, false);
                 parsingOverlay.classList.add('hidden');
-                resumeContent.classList.remove('hidden');
+                resumeContent.style.filter = '';
+                resumeContent.style.pointerEvents = '';
             }
         });
 
@@ -4002,13 +4194,31 @@
                 keyRequirements: jdData.keyRequirements || [] // 保留完整要求数组用于渲染卡片
             };
 
+            // 从当前简历中提取技能卡片数据（保存到母版简历）
+            const skillCardsData = extractSkillCardsFromCurrentDoc();
+
+            // 从 JD 中提取岗位类别（用于自动归类）
+            const jobCategory = extractJobCategoryFromJd(jdData);
+
             // 如果有选中的岗位版本，保存到版本
             if (resumeLibraryStore.state.selectedVersionId) {
                 const version = resumeLibraryStore.getVersion(resumeLibraryStore.state.selectedVersionId);
                 if (version) {
                     version.jdSnapshot = jdSnapshot;
-                    version.title = jdSnapshot.companyPosition || version.title;
+                    // 命名格式：XX 岗位简历 - 公司名 | 岗位名
+                    version.title = jdSnapshot.companyPosition
+                        ? `${jobCategory}岗位简历 - ${jdSnapshot.companyPosition}`
+                        : version.title;
                     version.updatedAt = new Date().toISOString();
+
+                    // 保存技能卡片到母版简历
+                    const base = resumeLibraryStore.getBase(version.baseResumeId);
+                    if (base) {
+                        base.skillCards = skillCardsData;
+                        base.category = jobCategory; // 保存岗位类别
+                        base.updatedAt = new Date().toISOString();
+                    }
+
                     resumeLibraryStore.persist();
                     console.log('[JD 保存] 已保存到岗位版本:', version.id);
 
@@ -4016,12 +4226,116 @@
                     renderHistoryList();
                 }
             }
-            // 否则保存到母版简历的临时 JD 缓存（可选功能）
+            // 否则保存到母版简历
             else {
-                // 基础版简历也可以缓存 JD 分析结果
+                const base = resumeLibraryStore.getBase(resumeLibraryStore.state.selectedBaseResumeId);
+                if (base) {
+                    base.skillCards = skillCardsData;
+                    base.jdSnapshot = jdSnapshot; // 基础版也缓存 JD 信息
+                    base.category = jobCategory; // 保存岗位类别
+                    base.updatedAt = new Date().toISOString();
+                    resumeLibraryStore.persist();
+                }
+                // 同时缓存到全局变量
                 window.currentJDAnalysis = jdSnapshot;
-                console.log('[JD 保存] 已缓存到全局变量');
+                console.log('[JD 保存] 已保存到母版简历:', base.id);
             }
+        }
+
+        /**
+         * 从 JD 中提取岗位类别
+         * @param {Object} jdData - JD 分析结果
+         * @returns {string} 岗位类别（如"产品经理"、"前端开发"）
+         */
+        function extractJobCategoryFromJd(jdData) {
+            // 优先从岗位名称中提取
+            const position = jdData.companyInfo?.position || '';
+            const category = guessJobCategory(position);
+            if (category) return category;
+
+            // 否则从关键要求中提取
+            const keyReqs = jdData.keyRequirements || [];
+            for (const req of keyReqs) {
+                const desc = req.description || '';
+                const categoryFromReq = guessJobCategory(desc);
+                if (categoryFromReq) return categoryFromReq;
+            }
+
+            // 默认为"通用"
+            return '通用';
+        }
+
+        /**
+         * 根据文本猜测岗位类别
+         * @param {string} text - 文本内容
+         * @returns {string|null} 岗位类别
+         */
+        function guessJobCategory(text) {
+            if (!text) return null;
+            const lowerText = text.toLowerCase();
+
+            // 产品经理类
+            if (lowerText.includes('产品') || lowerText.includes('product')) {
+                return '产品经理';
+            }
+            // 前端开发类
+            if (lowerText.includes('前端') || lowerText.includes('react') || lowerText.includes('vue') || lowerText.includes('javascript')) {
+                return '前端开发';
+            }
+            // 后端开发类
+            if (lowerText.includes('后端') || lowerText.includes('java') || lowerText.includes('go') || lowerText.includes('python') || lowerText.includes('服务端')) {
+                return '后端开发';
+            }
+            // 算法类
+            if (lowerText.includes('算法') || lowerText.includes('机器学习') || lowerText.includes('深度学习') || lowerText.includes('nlp') || lowerText.includes('cv')) {
+                return '算法工程师';
+            }
+            // 数据类
+            if (lowerText.includes('数据') || lowerText.includes('分析') || lowerText.includes('data')) {
+                return '数据分析';
+            }
+            // 设计类
+            if (lowerText.includes('设计') || lowerText.includes('ui') || lowerText.includes('ux') || lowerText.includes('交互')) {
+                return '设计师';
+            }
+            // 运营类
+            if (lowerText.includes('运营') || lowerText.includes('operation')) {
+                return '运营';
+            }
+            // 测试类
+            if (lowerText.includes('测试') || lowerText.includes('qa') || lowerText.includes('quality')) {
+                return '测试工程师';
+            }
+            // HR/人力类
+            if (lowerText.includes('人力') || lowerText.includes('hr') || lowerText.includes('招聘')) {
+                return '人力资源';
+            }
+
+            return null;
+        }
+
+        /**
+         * 从当前简历中提取技能卡片数据
+         * @returns {Array<string>} 技能字符串数组
+         */
+        function extractSkillCardsFromCurrentDoc() {
+            const skills = [];
+            const doc = resumeLibraryStore.currentEditingDoc;
+            if (!doc || !doc.sections) return skills;
+
+            const skillsSection = doc.sections.find(s => s.type === 'skills');
+            if (skillsSection && skillsSection.items) {
+                skillsSection.items.forEach(item => {
+                    // item.text 格式："AI 相关：Python、机器学习"
+                    const match = item.text?.match(/^([^:]+):(.+)$/);
+                    if (match) {
+                        // 支持多种分隔符：、,;
+                        const skillList = match[2].split(/[,,;]/).map(s => s.trim());
+                        skills.push(...skillList);
+                    }
+                });
+            }
+            return skills;
         }
 
         // 渲染 JD 卡片到素材区（按优先级分级显示）
