@@ -3105,6 +3105,11 @@
                 files = [files];
             }
 
+            // ★ 检查是否是图片格式，如果是直接使用前端 OCR
+            const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+            const fileExt = files[0].name.slice(files[0].name.lastIndexOf('.')).toLowerCase();
+            const isImageFile = imageExts.includes(fileExt);
+
             dropzone.classList.add('hidden');
             parsingOverlay.classList.remove('hidden');
             resumeContent.classList.add('hidden');
@@ -3116,13 +3121,24 @@
             // 步骤 1: 提取文字
             if (files.length === 1) {
                 updateParsingProgress(0, '正在读取文件...', files[0].name);
-                appendMessage(`正在读取 <strong>${files[0].name}</strong> 的内容特征...`, false);
+                if (isImageFile) {
+                    appendMessage(`正在对 <strong>${files[0].name}</strong> 进行 OCR 识别...`, false);
+                } else {
+                    appendMessage(`正在读取 <strong>${files[0].name}</strong> 的内容特征...`, false);
+                }
             } else {
                 updateParsingProgress(0, '正在读取文件...', `共 ${files.length} 个文件`);
                 appendMessage(`正在读取 <strong>${files.length}</strong> 个文件，请稍候...`, false);
             }
 
             try {
+                // ★ 图片格式直接使用前端 OCR
+                if (isImageFile) {
+                    await runFrontendOCR(files[0]);
+                    parsingOverlay.classList.add('hidden');
+                    return;
+                }
+
                 // 调用后端 API 进行真实解析
                 let result;
                 if (files.length === 1) {
