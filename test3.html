@@ -1048,6 +1048,203 @@
         [data-theme="retro-mac"] .theme-opt:hover { background: #fff; border: 2px solid #000; }
         [data-theme="retro-mac"] .theme-opt.active { background: #000; }
         [data-theme="retro-mac"] .theme-opt.active .theme-name, [data-theme="retro-mac"] .theme-opt.active .theme-desc { color: #fff; }
+
+        /* ═══════════════════════════════════════════════════════════
+           粒子特效系统 - Sanrio-Claw & Retro-Mac
+           ═══════════════════════════════════════════════════════════ */
+
+        /* Retro Mac 拖拽提取特效 */
+        .retro-extract-glitch {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            width: 32px;
+            height: 32px;
+            transform: translate(-50%, -50%);
+            animation: retroGlitch 0.35s ease-out forwards;
+        }
+        @keyframes retroGlitch {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); filter: none; }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.2) rotate(5deg); filter: invert(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8) rotate(-5deg); filter: invert(0); }
+        }
+
+        /* Retro Mac Worker 对话框 */
+        .rm-dialog-box {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            width: 200px;
+            background: #fff;
+            border: 2px solid #000;
+            box-shadow: 4px 4px 0 #000;
+            animation: rmDialogIn 0.2s steps(4) forwards;
+        }
+        @keyframes rmDialogIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .rm-dialog-titlebar {
+            background: #000;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .rm-dialog-content {
+            padding: 12px;
+            text-align: center;
+        }
+        .rm-screen-container {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 8px;
+            background: #f0f0f0;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rm-pixel-guy {
+            width: 32px;
+            height: 32px;
+            position: relative;
+        }
+        .rm-p-head {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: #000;
+        }
+        .rm-p-body {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 10px;
+            background: #000;
+        }
+        .rm-p-arm {
+            position: absolute;
+            top: 16px;
+            width: 8px;
+            height: 3px;
+            background: #000;
+        }
+        .rm-p-arm-l { left: 0; transform: rotate(-30deg); }
+        .rm-p-arm-r { right: 0; transform: rotate(30deg); }
+        .rm-p-leg {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 3px;
+            height: 8px;
+            background: #000;
+        }
+        .rm-p-leg-l { transform: translateX(-50%) rotate(15deg); }
+        .rm-p-leg-r { transform: translateX(-50%) rotate(-15deg); }
+        .rm-drop-text {
+            font-size: 9px;
+            line-height: 1.4;
+            color: #000;
+            font-family: 'Courier New', monospace;
+        }
+        .rm-crt-turn-off {
+            animation: rmTurnOff 0.3s ease-in forwards;
+        }
+        @keyframes rmTurnOff {
+            0% { opacity: 1; transform: scale(1); filter: none; }
+            50% { opacity: 0.5; transform: scale(0.95); filter: brightness(0.5); }
+            100% { opacity: 0; transform: scale(0.9); filter: brightness(0); }
+        }
+
+        /* Sanrio-Claw 瞬态礼物爆发 */
+        .transient-impact-burst {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            width: 80px;
+            height: 80px;
+            transform: translate(-50%, -50%);
+            animation: burstFade 0.7s ease-out forwards;
+        }
+        @keyframes burstFade {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .transient-doodle-gift, .transient-ssr-gift {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            animation: giftPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .transient-doodle-gift {
+            width: 60px;
+            height: 60px;
+        }
+        .transient-ssr-gift {
+            width: 120px;
+            height: 120px;
+            animation: ssrGiftPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes giftPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) translate(var(--dx, 0), var(--dy, 0)) rotate(var(--dr, 0deg)) scale(0.3); }
+            60% { opacity: 1; transform: translate(-50%, -50%) translate(calc(var(--dx, 0) * 0.3), calc(var(--dy, 0) * 0.3)) rotate(calc(var(--dr, 0deg) * 0.2)) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1); }
+        }
+        @keyframes ssrGiftPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) translate(var(--dx, 0), var(--dy, 0)) rotate(var(--dr, 0deg)) scale(0.2); }
+            50% { opacity: 1; transform: translate(-50%, -50%) translate(calc(var(--dx, 0) * 0.5), calc(var(--dy, 0) * 0.5)) rotate(calc(var(--dr, 0deg) * 0.3)) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1); }
+        }
+
+        /* 身体摇晃动画 for SSR */
+        .shake-active {
+            animation: bodyShake 0.6s ease-in-out;
+        }
+        @keyframes bodyShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-2deg); }
+            75% { transform: translateX(10px) rotate(2deg); }
+        }
+
+        /* Retro Mac 拖拽幽灵 */
+        #rm-drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+        .hand-wrist {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 30px;
+            background: #000;
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+        }
+        .pinch-hand-ex {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 20px;
+            border: 3px solid #000;
+            border-bottom: none;
+            border-radius: 15px 15px 0 0;
+        }
     </style>
 </head>
 <body id="main-body" class="h-screen flex overflow-hidden text-slate-800 bg-white">
@@ -6526,9 +6723,359 @@
                 });
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // 🎨 粒子特效系统 - Sanrio-Claw & Retro-Mac
+            // ═══════════════════════════════════════════════════════════
+            let cvs, ctx, particles = [];
+            let pullCount = 0;
+            let lastNormalGiftIndex = -1;
+
+            // 🎀 梦幻盲盒素材 (高级粉)
+            const NORMAL_GIFTS = [
+                `<svg viewBox="0 0 100 100" width="100%" height="100%"><g><path d="M50 45 C35 15 5 30 25 50 C5 70 35 85 50 55 C65 85 95 70 75 50 C95 30 65 15 50 45 Z" fill="#F9B3D1" opacity="0.9" transform="translate(-4, 4)"/><path d="M48 43 C33 13 3 28 23 48 C3 68 33 83 48 53 C63 83 93 68 73 48 C93 28 63 13 48 43 Z" fill="none" stroke="#232021" stroke-width="6" stroke-linecap="round"/><circle cx="48" cy="50" r="10" fill="#fff" stroke="#232021" stroke-width="5"/></g></svg>`,
+                `<svg viewBox="0 0 100 100" width="100%" height="100%"><g><path d="M50 15 L 60 40 L 90 40 L 65 60 L 75 90 L 50 70 L 25 90 L 35 60 L 10 40 L 40 40 Z" fill="#F5EAEF" opacity="0.9" transform="translate(5, 5)"/><path d="M48 13 L 58 38 L 88 38 L 63 58 L 73 88 L 48 68 L 23 88 L 33 58 L 8 38 L 38 38 Z" fill="none" stroke="#232021" stroke-width="6" stroke-linejoin="round"/><path d="M30 30 Q 50 50 70 30" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></g></svg>`,
+                `<svg viewBox="0 0 100 100" width="100%" height="100%"><g><circle cx="25" cy="25" r="15" fill="#FDF2F6" transform="translate(-3,3)"/><circle cx="75" cy="25" r="15" fill="#FDF2F6" transform="translate(3,3)"/><circle cx="50" cy="60" r="35" fill="#FDF2F6" transform="translate(0,5)"/><circle cx="25" cy="25" r="15" fill="none" stroke="#232021" stroke-width="6"/><circle cx="75" cy="25" r="15" fill="none" stroke="#232021" stroke-width="6"/><circle cx="50" cy="60" r="35" fill="none" stroke="#232021" stroke-width="6"/><path d="M35 55 Q 50 70 65 55" stroke="#F25599" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="38" cy="48" r="5" fill="#232021"/><circle cx="62" cy="48" r="5" fill="#232021"/></g></svg>`,
+                `<svg viewBox="0 0 100 100" width="100%" height="100%"><g><path d="M25 50 A 25 25 0 1 1 75 50 A 25 25 0 1 1 25 50 Z" fill="#F1E9EB" opacity="0.9" transform="translate(-4, 4)"/><path d="M25 50 L 5 30 L 5 70 Z M 75 50 L 95 30 L 95 70 Z" fill="#F1E9EB" opacity="0.9" transform="translate(-4, 4)"/><path d="M25 50 A 25 25 0 1 1 75 50 A 25 25 0 1 1 25 50 Z" fill="none" stroke="#232021" stroke-width="6"/><path d="M25 50 L 5 30 L 5 70 Z M 75 50 L 95 30 L 95 70 Z" fill="none" stroke="#232021" stroke-width="6" stroke-linejoin="round"/><path d="M40 32 Q 50 50 40 68" stroke="#F25599" stroke-width="5" fill="none" stroke-linecap="round"/></g></svg>`,
+                `<svg viewBox="0 0 100 100" width="100%" height="100%"><g><rect x="25" y="45" width="50" height="45" fill="#F5EAEF" transform="translate(5, -4)"/><rect x="15" y="25" width="70" height="20" fill="#F68DB9" transform="translate(5, -4)"/><rect x="25" y="45" width="50" height="45" fill="none" stroke="#232021" stroke-width="6" stroke-linejoin="round"/><rect x="15" y="25" width="70" height="20" fill="none" stroke="#232021" stroke-width="6" stroke-linejoin="round"/><path d="M50 25 V 90" stroke="#72525B" stroke-width="6"/><path d="M50 25 C 35 5 15 20 40 25 C 65 5 85 20 60 25" fill="none" stroke="#72525B" stroke-width="6" stroke-linecap="round"/></g></svg>`
+            ];
+            const SSR_GIFTS = [ `<svg viewBox="0 0 100 100" width="100%" height="100%"><g><path d="M10 80 L 90 80 L 80 30 L 65 55 L 50 20 L 35 55 L 20 30 Z" fill="#F25599" transform="translate(0, 4)"/><path d="M10 80 L 90 80 L 80 30 L 65 55 L 50 20 L 35 55 L 20 30 Z" fill="none" stroke="#232021" stroke-width="7" stroke-linejoin="round"/><circle cx="50" cy="20" r="8" fill="#F9B3D1" stroke="#232021" stroke-width="5"/><circle cx="20" cy="30" r="6" fill="#72525B" stroke="#232021" stroke-width="4"/><circle cx="80" cy="30" r="6" fill="#72525B" stroke="#232021" stroke-width="4"/></g></svg>` ];
+            const DREAMY_CLOUD_SVG = `<svg viewBox="0 0 100 100" width="100%" height="100%"><g fill="#fff" stroke="#F25599" stroke-width="3" stroke-linejoin="round"><path d="M50 20 C65 10 80 20 75 35 C90 35 95 50 85 60 C95 75 80 85 65 80 C60 95 40 95 35 80 C20 85 5 75 15 60 C5 50 10 35 25 35 C20 20 35 10 50 20 Z"/></g></svg>`;
+
+            // 🕹️ Retro Mac 1-bit 纯手工像素素材
+            const RETRO_WORKERS = [
+                `<svg viewBox="0 0 32 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="square" shape-rendering="crispEdges"><rect x="6" y="8" width="4" height="4" fill="#000"/><path d="M8 12 v8 M8 16 h4 l2 -2 M8 20 l-4 6 M8 20 l2 6 M14 24 h4"/><path d="M18 12 h10 v8 h-10 z M18 20 h10 v2 h-10 z" fill="#fff"/><path d="M16 22 h14 M20 14 h6 v4 h-6 z"/></svg>`,
+                `<svg viewBox="0 0 32 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="square" shape-rendering="crispEdges"><rect x="18" y="10" width="4" height="4" fill="#000"/><path d="M20 14 l-4 6 M16 20 l-2 6 M16 20 l4 6 M20 14 l-6 2 l-2 -4"/><path d="M4 6 h10 v10 h-10 z" fill="#fff"/><path d="M8 6 v4 h4 v-4 M6 12 h6 M6 14 h6"/></svg>`,
+                `<svg viewBox="0 0 32 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="square" shape-rendering="crispEdges"><rect x="12" y="6" width="4" height="4" fill="#000"/><path d="M14 10 v10 M14 14 l-4 -4 l-4 -2 M14 14 l4 4 M14 20 l-4 6 M14 20 l4 6 M4 2 h4 v4 h-4 z fill="#000"/><path d="M20 22 h8 v4 h-8 z fill="#000"/></svg>`,
+                `<svg viewBox="0 0 32 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="square" shape-rendering="crispEdges"><rect x="14" y="14" width="4" height="4" fill="#000"/><path d="M16 18 v8 M16 20 l-4 2 M16 20 l4 2 M16 26 l-4 6 M16 26 l4 6"/><path d="M16 2 v4 M12 4 l2 2 M20 4 l-2 2 M14 8 h4 v4 h-4 z"/></svg>`,
+                `<svg viewBox="0 0 32 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="square" shape-rendering="crispEdges"><rect x="20" y="6" width="4" height="4" fill="#000"/><path d="M22 10 l-4 6 M18 16 l-6 2 l4 -4 M18 16 l4 2 l2 -4 M18 16 l-4 6 l-4 2 M18 16 l2 6 l-4 4"/><path d="M2 12 h4 M4 16 h6 M2 20 h4"/></svg>`,
+                `<svg viewBox="0 0 32 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="square" shape-rendering="crispEdges"><rect x="14" y="8" width="4" height="4" fill="#000"/><path d="M16 12 v8 M16 16 l-4 2 M16 16 h4 l2 -2 M16 20 l-4 6 M16 20 h4 v6 M8 26 h16"/><path d="M22 12 h4 v4 h-4 z M26 13 h2 v2 h-2"/><path d="M23 8 q1-2 2 0 t2 0"/></svg>`,
+                `<svg viewBox="0 0 32 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="square" shape-rendering="crispEdges"><rect x="10" y="8" width="4" height="4" fill="#000"/><path d="M12 12 v8 M12 14 l4 2 l4 -6 M12 16 l6 2 M12 20 l-4 6 M12 20 l4 6"/><path d="M20 10 l-4 16 M14 26 h6 v4 h-6 z M6 26 h4 v4 h-4 z fill="#000"/></svg>`
+            ];
+
+            // Retro Mac 绝对轮次任务队列
+            let rmTaskCounter = 0;
+            const rmTasks = [
+                { state: 'type',  text: "键盘冒烟中...<br>正在以 C++(Ctrl+C, Ctrl+V) 为您疯狂输出..." },
+                { state: 'run',   text: "已注入 99% 纯度的冰美式，<br>牛马超频冲刺简历启动..." },
+                { state: 'brick', text: "「非人类神力已激活」<br>为您把零散经历糊成宏伟的简历金字塔..." },
+                { state: 'type',  text: "「暴走模式」<br>该工人正把脑袋砸向键盘，为您火速生成文案..." }
+            ];
+            let rmGhost = null;
+            let rmPhys = { x: 0, y: 0, angle: 0, va: 0, lastTime: 0 };
+
+            function initFx() {
+                cvs = document.createElement('canvas');
+                cvs.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999';
+                document.body.appendChild(cvs);
+                ctx = cvs.getContext('2d');
+                _resize();
+                window.addEventListener('resize', _resize);
+
+                document.addEventListener('pointerdown', _onDown, true);
+                document.addEventListener('pointermove', _onMove, true);
+
+                // 监听拖拽开始：Retro Mac 掉帧抓取特效
+                document.addEventListener('dragstart', (e) => {
+                    if (current === 'retro-mac' && (e.target.closest('.jd-card-item') || e.target.closest('.template-card') || e.target.id === 'jd-drag-source')) {
+                        _spawnRetroExtract(e.clientX, e.clientY);
+                    }
+                }, true);
+
+                // 监听拖拽放下
+                document.addEventListener('drop', (e) => {
+                    const paper = document.getElementById('resume-paper');
+                    if (!paper || !paper.contains(e.target)) return;
+
+                    if (current === 'sanrio-claw') {
+                        _spawnMarkerGift(e.clientX, e.clientY);
+                    } else if (current === 'retro-mac') {
+                        _spawnRetroWorker(e.clientX, e.clientY);
+                    }
+                }, true);
+
+                _tick();
+            }
+
+            function _resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
+
+            function _onDown(e) {
+                const paper = document.getElementById('resume-paper');
+                if (paper && paper.contains(e.target)) return;
+                if (e.target.closest('#theme-switcher')) return;
+
+                if (current === 'sanrio-claw') {
+                    _spawnDreamyBubbles(e.clientX, e.clientY, 5);
+                } else if (current === 'retro-mac') {
+                    _spawnBurst(e.clientX, e.clientY);
+                }
+            }
+
+            function _onMove(e) {
+                if (e.buttons === 0) return;
+                if (current !== 'retro-mac') return;
+                if (Math.random() > 0.25) return;
+                particles.push({
+                    x: e.clientX-(e.clientX%4), y: e.clientY-(e.clientY%4),
+                    vx: 0, vy: 0, life: 1, decay: .06, size: 4, type: 'pixel'
+                });
+            }
+
+            /* ── 💾 Retro Mac 特效系统 ── */
+            function _spawnBurst(x, y) {
+                const n = 8;
+                for (let i = 0; i < n; i++) {
+                    const a = (Math.PI*2/n)*i + Math.random()*.5;
+                    const sp = 1.5 + Math.random()*2.5;
+                    particles.push({
+                        x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+                        life: 1, decay: .025+Math.random()*.015,
+                        size: 3, type: 'pixel'
+                    });
+                }
+            }
+
+            function _spawnRetroExtract(x, y) {
+                const glitch = document.createElement('div');
+                glitch.className = 'retro-extract-glitch';
+                glitch.style.left = x + 'px';
+                glitch.style.top = y + 'px';
+                glitch.innerHTML = RETRO_WORKERS[Math.floor(Math.random() * RETRO_WORKERS.length)];
+                document.body.appendChild(glitch);
+                setTimeout(() => glitch.remove(), 350);
+            }
+
+            function _initRetroV5() {
+                if (document.getElementById('rm-drag-ghost')) return;
+                rmGhost = document.createElement('div');
+                rmGhost.id = 'rm-drag-ghost';
+                rmGhost.innerHTML = `
+                    <div class="hand-wrist"></div><div class="pinch-hand-ex"></div>
+                    <div class="rm-pixel-guy rm-state-dangle">
+                        <div class="rm-p-head"></div><div class="rm-p-body"></div>
+                        <div class="rm-p-arm rm-p-arm-l"></div><div class="rm-p-arm rm-p-arm-r"></div>
+                        <div class="rm-p-leg rm-p-leg-l"></div><div class="rm-p-leg rm-p-leg-r"></div>
+                    </div>`;
+                document.body.appendChild(rmGhost);
+            }
+
+            document.addEventListener('dragstart', (e) => {
+                if (current !== 'retro-mac') return;
+                const isDraggable = e.target.closest('.jd-card-item') || e.target.id === 'jd-drag-source';
+                if (!isDraggable) return;
+
+                _initRetroV5();
+                const img = new Image();
+                img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                e.dataTransfer.setDragImage(img, 0, 0);
+
+                rmGhost.style.display = 'block';
+                rmPhys.x = e.clientX;
+                rmPhys.angle = 0;
+                rmPhys.va = 0;
+                rmPhys.lastTime = Date.now();
+            }, true);
+
+            document.addEventListener('drag', (e) => {
+                if (!rmGhost || rmGhost.style.display !== 'block' || e.clientX === 0) return;
+
+                const now = Date.now();
+                const dt = (now - rmPhys.lastTime) / 1000;
+                rmPhys.lastTime = now;
+
+                const dx = e.clientX - rmPhys.x;
+                rmPhys.x = e.clientX;
+
+                rmGhost.style.left = e.clientX + 'px';
+                rmGhost.style.top = e.clientY + 'px';
+
+                if (dt > 0) {
+                    const force = -dx * 0.6;
+                    const gravity = -rmPhys.angle * 10;
+                    rmPhys.va += (force + gravity) * dt * 60;
+                    rmPhys.va *= 0.9;
+                    rmPhys.angle += rmPhys.va * dt;
+                    rmPhys.angle = Math.max(-55, Math.min(55, rmPhys.angle));
+                }
+
+                const guy = rmGhost.querySelector('.rm-pixel-guy');
+                if (guy) {
+                    guy.style.transform = `translateX(-50%) rotate(${rmPhys.angle}deg)`;
+                }
+            }, true);
+
+            document.addEventListener('dragend', () => {
+                if (rmGhost) rmGhost.style.display = 'none';
+            }, true);
+
+            function _spawnRetroWorker(x, y) {
+                const task = rmTasks[rmTaskCounter % rmTasks.length];
+                rmTaskCounter++;
+
+                const dialog = document.createElement('div');
+                dialog.className = 'rm-dialog-box';
+                dialog.style.left = x + 'px';
+                dialog.style.top = (y - 50) + 'px';
+
+                dialog.innerHTML = `
+                    <div class="rm-dialog-titlebar"><div class="rm-dialog-title-text">Worker_OS_v5.0</div></div>
+                    <div class="rm-dialog-content rm-state-${task.state}">
+                        <div class="rm-screen-container"><div class="rm-pixel-guy">
+                            <div class="rm-p-head"></div><div class="rm-p-body"></div>
+                            <div class="rm-p-arm rm-p-arm-l"></div><div class="rm-p-arm rm-p-arm-r"></div>
+                            <div class="rm-p-leg rm-p-leg-l"></div><div class="rm-p-leg rm-p-leg-r"></div>
+                            <div class="rm-p-prop"></div>
+                        </div></div>
+                        <div class="rm-drop-text">${task.text}</div>
+                    </div>`;
+                document.body.appendChild(dialog);
+
+                document.body.style.filter = 'invert(1)';
+                setTimeout(() => document.body.style.filter = '', 60);
+
+                setTimeout(() => {
+                    dialog.classList.add('rm-crt-turn-off');
+                    setTimeout(() => { if (dialog.parentNode) dialog.remove(); }, 300);
+                }, 2500);
+            }
+
+            /* ── 🎀 梦幻盲盒特效系统 ── */
+            function _spawnDreamyBubbles(x, y, count = 15) {
+                const colors = ['#F25599', '#72525B', '#F9B3D1', '#F5EAEF', '#ffffff'];
+                for (let i = 0; i < count; i++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const sp = 3 + Math.random() * 6;
+                    particles.push({
+                        x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp - 2,
+                        life: 1, decay: 0.01 + Math.random()*0.015,
+                        size: 4 + Math.random()*12, type: Math.random() > 0.5 ? 'bubble' : 'glow',
+                        color: colors[Math.floor(Math.random()*colors.length)]
+                    });
+                }
+            }
+
+            function _spawnSSRBlast(x, y) {
+                const colors = ['#F9B3D1', '#F25599', '#72525B', '#ffffff'];
+                const spawnCluster = (cx, cy, count, speedBase) => {
+                    for (let i = 0; i < count; i++) {
+                        const a = Math.random() * Math.PI * 2;
+                        const sp = speedBase + Math.random() * 20;
+                        particles.push({
+                            x: cx, y: cy, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+                            life: 1, decay: 0.008 + Math.random()*0.01,
+                            size: 6 + Math.random()*14, type: Math.random() > 0.3 ? 'glow' : 'bubble',
+                            color: colors[Math.floor(Math.random()*colors.length)]
+                        });
+                    }
+                };
+
+                particles.push({x, y, vx: 28, vy: 0, life: 1, decay: 0.02, size: 10, type: 'ring', color: '#72525B'});
+                particles.push({x, y, vx: 20, vy: 0, life: 1, decay: 0.015, size: 20, type: 'ring', color: '#F25599'});
+                spawnCluster(x, y, 60, 10);
+
+                setTimeout(() => {
+                    spawnCluster(x - 50, y - 60, 30, 8);
+                    particles.push({x: x-50, y: y-60, vx: 15, vy: 0, life: 1, decay: 0.025, size: 8, type: 'ring', color: '#F9B3D1'});
+                }, 300);
+
+                setTimeout(() => {
+                    spawnCluster(x + 60, y - 90, 40, 12);
+                    particles.push({x: x+60, y: y-90, vx: 18, vy: 0, life: 1, decay: 0.02, size: 12, type: 'ring', color: '#F25599'});
+                }, 550);
+            }
+
+            function _spawnMarkerGift(x, y) {
+                pullCount++;
+                const burstDiv = document.createElement('div');
+                burstDiv.className = 'transient-impact-burst';
+                burstDiv.style.left = `${x}px`; burstDiv.style.top = `${y}px`;
+                burstDiv.innerHTML = DREAMY_CLOUD_SVG;
+                document.body.appendChild(burstDiv);
+
+                const isSSR = (pullCount % 4 === 0);
+
+                let randomSVG = '';
+                if (isSSR) {
+                    randomSVG = SSR_GIFTS[Math.floor(Math.random() * SSR_GIFTS.length)];
+                } else {
+                    let nextIndex;
+                    do { nextIndex = Math.floor(Math.random() * NORMAL_GIFTS.length); }
+                    while (nextIndex === lastNormalGiftIndex && NORMAL_GIFTS.length > 1);
+                    lastNormalGiftIndex = nextIndex;
+                    randomSVG = NORMAL_GIFTS[nextIndex];
+                }
+
+                const giftDiv = document.createElement('div');
+                giftDiv.className = isSSR ? 'transient-ssr-gift' : 'transient-doodle-gift';
+                giftDiv.style.left = `${x}px`; giftDiv.style.top = `${y}px`;
+
+                const dx = (Math.random() * 120 - 60) + 'px';
+                const dy = (Math.random() * 60 - 30) + 'px';
+                const dr = (Math.random() * 40 - 20) + 'deg';
+                giftDiv.style.setProperty('--dx', dx);
+                giftDiv.style.setProperty('--dy', dy);
+                giftDiv.style.setProperty('--dr', dr);
+
+                giftDiv.innerHTML = randomSVG;
+                document.body.appendChild(giftDiv);
+
+                if (isSSR) {
+                    document.body.classList.add('shake-active');
+                    setTimeout(() => document.body.classList.remove('shake-active'), 600);
+                    _spawnSSRBlast(x, y);
+                } else {
+                    _spawnDreamyBubbles(x, y, 25);
+                }
+
+                setTimeout(() => { if (burstDiv.parentNode) burstDiv.remove(); }, 700);
+                setTimeout(() => { if (giftDiv.parentNode) giftDiv.remove(); }, isSSR ? 3500 : 2200);
+            }
+
+            function _tick() {
+                ctx.clearRect(0, 0, cvs.width, cvs.height);
+                ctx.globalCompositeOperation = current === 'sanrio-claw' ? 'lighter' : 'source-over';
+
+                for (let i = particles.length-1; i >= 0; i--) {
+                    const p = particles[i];
+                    if (p.type === 'ring') {
+                        p.size += p.vx;
+                        p.life -= p.decay;
+                        if (p.life <= 0) { particles.splice(i, 1); continue; }
+                        ctx.globalAlpha = Math.max(0, p.life);
+                        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                        ctx.strokeStyle = p.color; ctx.lineWidth = 15 * p.life; ctx.stroke();
+                        continue;
+                    }
+                    if (p.type !== 'pixel') {
+                        p.vy -= 0.05;
+                        p.vx *= 0.94;
+                        p.vy *= 0.94;
+                    }
+                    p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+                    if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+                    ctx.globalAlpha = Math.max(0, p.life);
+
+                    if (p.type === 'glow') {
+                        ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size * p.life), 0, Math.PI*2);
+                        ctx.fillStyle = p.color; ctx.fill();
+                        ctx.shadowBlur = 20; ctx.shadowColor = p.color; ctx.fill(); ctx.shadowBlur = 0;
+                    } else if (p.type === 'bubble') {
+                        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fill();
+                        ctx.strokeStyle = p.color; ctx.lineWidth = 2; ctx.stroke();
+                    } else if (p.type === 'pixel') {
+                        ctx.fillStyle = '#000'; ctx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                }
+                ctx.globalAlpha = 1;
+                ctx.globalCompositeOperation = 'source-over';
+                requestAnimationFrame(_tick);
+            }
+
             // 初始化
             createSwitcher();
             apply(current);
+            initFx();
             console.log('[主题] 主题切换器已初始化，当前主题:', current);
         })();
     </script>
