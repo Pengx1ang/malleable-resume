@@ -8068,40 +8068,43 @@
             return card;
         }
 
-        // 轻量级欢迎提示
+        // 轻量级欢迎提示 - 延迟显示
         function showWelcomeHint() {
             const hasSeen = localStorage.getItem('onboarding-welcome');
             if (hasSeen) return;
 
-            const hint = document.createElement('div');
-            hint.className = 'onboarding-card';
-            hint.style.cssText = `
-                position: fixed;
-                top: 80px;
-                right: 20px;
-                max-width: 320px;
-                z-index: 10000;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-                animation: slideInRight 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            `;
-            hint.innerHTML = `
-                <button class="onboarding-dismiss" onclick="this.closest('.onboarding-card').remove(); localStorage.setItem('onboarding-welcome', 'true')">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-                <h4 class="onboarding-card-title">欢迎使用</h4>
-                <p class="onboarding-card-description" style="margin-bottom: 12px;">
-                    粘贴 JD 一键生成定制简历。<br>
-                    💡 <strong>AI 高亮</strong>内容可点击编辑，悬浮查看更多信息。
-                </p>
-                <div class="onboarding-card-actions">
-                    <button class="btn btn-primary" onclick="this.closest('.onboarding-card').remove(); localStorage.setItem('onboarding-welcome', 'true')" style="flex: 1;">
-                        开始使用
+            // 延迟 1.5 秒显示，让页面先渲染完成
+            setTimeout(() => {
+                const hint = document.createElement('div');
+                hint.className = 'onboarding-card';
+                hint.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    max-width: 320px;
+                    z-index: 10000;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+                    animation: slideInRight 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+                `;
+                hint.innerHTML = `
+                    <button class="onboarding-dismiss" onclick="this.closest('.onboarding-card').remove(); localStorage.setItem('onboarding-welcome', 'true')">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
                     </button>
-                </div>
-            `;
-            document.body.appendChild(hint);
+                    <h4 class="onboarding-card-title">欢迎使用</h4>
+                    <p class="onboarding-card-description" style="margin-bottom: 12px;">
+                        粘贴 JD 一键生成定制简历。<br>
+                        💡 <strong>AI 高亮</strong>内容可点击编辑，悬浮查看更多信息。
+                    </p>
+                    <div class="onboarding-card-actions">
+                        <button class="btn btn-primary" onclick="this.closest('.onboarding-card').remove(); localStorage.setItem('onboarding-welcome', 'true')" style="flex: 1;">
+                            开始使用
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(hint);
+            }, 1500);
         }
 
         // ═══════════════════════════════════════════════════════════
