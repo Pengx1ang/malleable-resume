@@ -11,7 +11,156 @@
     <!-- 拖拽排序支持（样式编辑模式） -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; }
+        /* ═══════════════════════════════════════════════════════════
+           🎨 优化后的设计系统 - Design System v2.0
+           ═══════════════════════════════════════════════════════════ */
+
+        /* === 1. 基础重置与核心变量 === */
+        :root {
+            /* 主色调 - 专业蓝色系 */
+            --color-primary-50: #eff6ff;
+            --color-primary-100: #dbeafe;
+            --color-primary-200: #bfdbfe;
+            --color-primary-300: #93c5fd;
+            --color-primary-400: #60a5fa;
+            --color-primary-500: #3b82f6;
+            --color-primary-600: #2563eb;
+            --color-primary-700: #1d4ed8;
+            --color-primary-800: #1e40af;
+            --color-primary-900: #1e3a8a;
+
+            /* 中性色 - 现代灰阶 */
+            --color-neutral-50: #f9fafb;
+            --color-neutral-100: #f3f4f6;
+            --color-neutral-200: #e5e7eb;
+            --color-neutral-300: #d1d5db;
+            --color-neutral-400: #9ca3af;
+            --color-neutral-500: #6b7280;
+            --color-neutral-600: #4b5563;
+            --color-neutral-700: #374151;
+            --color-neutral-800: #1f2937;
+            --color-neutral-900: #111827;
+
+            /* 功能色 */
+            --color-success: #10b981;
+            --color-success-light: #d1fae5;
+            --color-warning: #f59e0b;
+            --color-warning-light: #fef3c7;
+            --color-error: #ef4444;
+            --color-error-light: #fee2e2;
+            --color-info: #3b82f6;
+            --color-info-light: #dbeafe;
+
+            /* 间距系统 - 4px 基准 */
+            --spacing-1: 4px;
+            --spacing-2: 8px;
+            --spacing-3: 12px;
+            --spacing-4: 16px;
+            --spacing-5: 20px;
+            --spacing-6: 24px;
+            --spacing-8: 32px;
+            --spacing-10: 40px;
+            --spacing-12: 48px;
+            --spacing-16: 64px;
+
+            /* 阴影系统 */
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+            /* 圆角系统 */
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 12px;
+            --radius-2xl: 16px;
+            --radius-full: 9999px;
+
+            /* 字体系统 */
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
+
+            /* 字号层级 */
+            --text-xs: 11px;
+            --text-sm: 12px;
+            --text-base: 13px;
+            --text-lg: 14px;
+            --text-xl: 16px;
+            --text-2xl: 18px;
+            --text-3xl: 20px;
+
+            /* 行高 */
+            --leading-tight: 1.25;
+            --leading-normal: 1.5;
+            --leading-relaxed: 1.75;
+
+            /* 字重 */
+            --font-normal: 400;
+            --font-medium: 500;
+            --font-semibold: 600;
+            --font-bold: 700;
+
+            /* 过渡 */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            /* 主题变量锚点 */
+            --t-shell: #f1f5f9;
+            --t-panel: #ffffff;
+            --t-border: #e2e8f0;
+            --t-text1: #1e293b;
+            --t-text2: #64748b;
+            --t-accent: #8b5cf6;
+            --t-accent-s: #ede9fe;
+            --t-btn: #1e293b;
+            --t-btn-t: #ffffff;
+            --t-r: 12px;
+            --t-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        /* === 2. 基础样式重置 === */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--t-panel);
+            color: var(--t-text1);
+            line-height: var(--leading-normal);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* === 3. 通用工具类 === */
+        .transition-base { transition: all var(--transition-base); }
+        .transition-fast { transition: all var(--transition-fast); }
+        .transition-spring { transition: all var(--transition-spring); }
+
+        /* === 4. 滚动条美化 === */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--color-neutral-100); }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-neutral-300);
+            border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-400); }
+
+        /* === 5. 焦点状态优化 === */
+        :focus-visible {
+            outline: 2px solid var(--color-primary-500);
+            outline-offset: 2px;
+            border-radius: var(--radius-md);
+        }
+
+        /* === 6. 文本选择样式 === */
+        ::selection {
+            background-color: var(--color-primary-200);
+            color: var(--color-primary-900);
+        }
 
         /* --- 1. 刚性保护：侧边栏与面板布局 --- */
         #left-sidebar { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); width: 260px; flex-shrink: 0; overflow: hidden; white-space: nowrap; border-right: 1px solid #e2e8f0; }
