@@ -3775,10 +3775,6 @@
             return result.reply;
         }
 
-        let isPreviewMode = false;
-        let currentZoom = 100; // 当前缩放百分比
-        let isManualZoom = false; // 是否手动缩放
-
         function updateScale() {
             const container = document.getElementById('canvas-container');
             const paper = document.getElementById('resume-paper');
@@ -6924,6 +6920,11 @@
         let initialStyleSnapshot = null; // 进入时的样式快照
         let currentSelectedElement = null; // 当前选中的元素
         let currentSelectedPath = []; // 当前选中路径（如 ['全局', '项目经历区', 'bullet 1']）
+
+        // 缩放控制状态
+        let currentZoom = 100; // 当前缩放百分比
+        let isManualZoom = false; // 是否手动缩放
+        let isPreviewMode = false;
 
         // 默认样式配置
         const defaultStyleConfig = {
