@@ -3825,7 +3825,18 @@
                 zoomValue.textContent = currentZoom + '%';
             }
             isManualZoom = true; // 标记为手动缩放
-            console.log('[Zoom] 手动缩放:', currentZoom + '%');
+            console.log('[Zoom] handleZoomChange:', currentZoom + '%');
+
+            // 直接获取 paper 元素并应用缩放
+            const paper = document.getElementById('resume-paper');
+            console.log('[Zoom] paper element:', paper ? '存在' : '不存在');
+            if (paper) {
+                const scale = currentZoom / 100;
+                paper.style.setProperty('transform', `scale(${scale})`, 'important');
+                paper.style.marginBottom = `${1160 * scale}px`;
+                console.log('[Zoom] 已直接应用缩放:', paper.style.transform);
+            }
+
             updateScale();
         }
 
