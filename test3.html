@@ -8944,18 +8944,12 @@
         function onDrag(e) {
             if (!isDragging || !dragGhost) return;
 
-            const resumePaper = document.getElementById('resume-paper');
-            const paperRect = resumePaper.getBoundingClientRect();
-
-            // 更新幽灵位置（完全自由，无边界限制）
-            let newX = e.clientX - dragOffset.x;
-            let newY = e.clientY - dragOffset.y;
+            // 更新幽灵位置（完全自由，鼠标到哪就到哪）
+            const newX = e.clientX - dragOffset.x;
+            const newY = e.clientY - dragOffset.y;
 
             dragGhost.style.left = newX + 'px';
             dragGhost.style.top = newY + 'px';
-
-            // 检测吸附（仅视觉预览，不实际移动）
-            checkSnapPreview(newX - paperRect.left + resumePaper.scrollLeft, newY - paperRect.top + resumePaper.scrollTop, dragGhost.offsetWidth, dragGhost.offsetHeight);
         }
 
         // 结束拖拽
@@ -8967,16 +8961,9 @@
                 const resumePaper = document.getElementById('resume-paper');
                 const paperRect = resumePaper.getBoundingClientRect();
 
-                // 计算相对于 resume-paper 的坐标
-                let finalX = parseInt(dragGhost.style.left) - paperRect.left + resumePaper.scrollLeft;
-                let finalY = parseInt(dragGhost.style.top) - paperRect.top + resumePaper.scrollTop;
-
-                // 结束时检测吸附（默认关闭，按 Shift 键才启用）
-                if (e.shiftKey) {
-                    const snapped = getSnapPosition(finalX, finalY, dragGhost.offsetWidth, dragGhost.offsetHeight);
-                    if (snapped.x !== null) finalX = snapped.x;
-                    if (snapped.y !== null) finalY = snapped.y;
-                }
+                // 直接使用幽灵元素的最终位置（完全自由，无吸附）
+                const finalX = parseInt(dragGhost.style.left) - paperRect.left + resumePaper.scrollLeft;
+                const finalY = parseInt(dragGhost.style.top) - paperRect.top + resumePaper.scrollTop;
 
                 imageSection.style.left = finalX + 'px';
                 imageSection.style.top = finalY + 'px';
