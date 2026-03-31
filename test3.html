@@ -816,14 +816,20 @@
             float: left;
             margin-right: 16px;
             margin-bottom: 16px;
+            position: relative; /* 覆盖 absolute 定位 */
+            left: auto !important;
+            top: auto !important;
         }
         .resume-image-section.float-right {
             float: right;
             margin-left: 16px;
             margin-bottom: 16px;
+            position: relative; /* 覆盖 absolute 定位 */
+            left: auto !important;
+            top: auto !important;
         }
-        .resume-text-line::after,
-        .resume-bullet-list::after {
+        /* 清除浮动 - 应用于简历内容容器末尾 */
+        #resume-content::after {
             content: "";
             display: table;
             clear: both;
@@ -9230,11 +9236,40 @@
             console.log('[图片] 保存位置到数据...');
         }
 
-        // 切换文字环绕
+        // 切换文字环绕（循环模式：自由定位 → 左浮动 → 右浮动 → 自由定位）
         window.toggleImageFloat = function(btn) {
             const imageSection = btn.closest('.resume-image-section');
-            imageSection.classList.toggle('float-left');
-            imageSection.classList.toggle('float-right');
+            const hasFloatLeft = imageSection.classList.contains('float-left');
+            const hasFloatRight = imageSection.classList.contains('float-right');
+
+            // 移除所有浮动类
+            imageSection.classList.remove('float-left', 'float-right');
+
+            if (!hasFloatLeft && !hasFloatRight) {
+                // 之前是自由定位 → 切换为左浮动
+                imageSection.classList.add('float-left');
+                appendMessage('📷 文字环绕：左浮动', false);
+            } else if (hasFloatLeft) {
+                // 之前是左浮动 → 切换为右浮动
+                imageSection.classList.remove('float-left');
+                imageSection.classList.add('float-right');
+                appendMessage('📷 文字环绕：右浮动', false);
+            } else if (hasFloatRight) {
+                // 之前是右浮动 → 切换为自由定位
+                appendMessage('📷 已切换为自由定位', false);
+            }
+
+            // 更新控制按钮图标
+            const floatBtn = imageSection.querySelector('[onclick="toggleImageFloat(this)"]');
+            if (floatBtn) {
+                if (imageSection.classList.contains('float-left')) {
+                    floatBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>';
+                } else if (imageSection.classList.contains('float-right')) {
+                    floatBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M7 18h13"/></svg>';
+                } else {
+                    floatBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h8"/></svg>';
+                }
+            }
         };
 
         // 切换层级菜单
