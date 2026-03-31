@@ -8971,8 +8971,8 @@
                 let finalX = parseInt(dragGhost.style.left) - paperRect.left + resumePaper.scrollLeft;
                 let finalY = parseInt(dragGhost.style.top) - paperRect.top + resumePaper.scrollTop;
 
-                // 结束时检测吸附（按 Alt 键跳过吸附）
-                if (!e.altKey) {
+                // 结束时检测吸附（默认关闭，按 Shift 键才启用）
+                if (e.shiftKey) {
                     const snapped = getSnapPosition(finalX, finalY, dragGhost.offsetWidth, dragGhost.offsetHeight);
                     if (snapped.x !== null) finalX = snapped.x;
                     if (snapped.y !== null) finalY = snapped.y;
@@ -9005,7 +9005,7 @@
         function getSnapPosition(x, y, width, height) {
             const resumePaper = document.getElementById('resume-paper');
             const paperRect = resumePaper.getBoundingClientRect();
-            const snapThreshold = 10; // 10px 吸附阈值
+            const snapThreshold = 5; // 降低到 5px，更精确
 
             const result = { x: null, y: null };
 
@@ -9081,13 +9081,17 @@
             return result;
         }
 
-        // 检测吸附（仅预览，显示指示线）
+        // 检测吸附（仅预览，显示指示线）- 默认关闭，按 Shift 键才显示
         function checkSnapPreview(x, y, width, height) {
+            // 默认不显示吸附线，按 Shift 键才显示
+            return;
+            // 以下代码在默认情况下不会执行
+            /*
             clearSnapLines();
             // 只显示指示线，不实际移动
             const resumePaper = document.getElementById('resume-paper');
             const paperRect = resumePaper.getBoundingClientRect();
-            const snapThreshold = 10;
+            const snapThreshold = 5; // 降低到 5px
 
             const imageLeft = x;
             const imageRight = x + width;
