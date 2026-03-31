@@ -3814,11 +3814,13 @@
         function initZoomSlider() {
             const zoomSlider = document.getElementById('zoom-slider');
             const zoomValue = document.getElementById('zoom-value');
+            console.log('[Zoom] 初始化缩放滑块:', zoomSlider ? '找到' : '未找到', zoomValue ? '找到' : '未找到');
             if (zoomSlider && zoomValue) {
                 zoomSlider.addEventListener('input', (e) => {
                     currentZoom = parseInt(e.target.value);
                     zoomValue.textContent = currentZoom + '%';
                     isManualZoom = true; // 标记为手动缩放
+                    console.log('[Zoom] 手动缩放:', currentZoom + '%');
                     updateScale();
                 });
             }
@@ -6997,7 +6999,9 @@
             console.log('[初始化] 样式编辑模式已初始化');
 
             // 初始化缩放滑块
+            console.log('[Zoom] 开始初始化缩放滑块');
             initZoomSlider();
+            console.log('[Zoom] 初始化完成');
 
             // 点击"浏览模式"按钮进入样式编辑模式
             btnTogglePreview.addEventListener('click', () => {
