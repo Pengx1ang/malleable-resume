@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malleable Resume 你的下一份简历</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+            margin: 0;
+            overscroll-behavior: none;
+        }
+
+        ::-webkit-scrollbar { display: none; }
+
+        .text-gradient { background: linear-gradient(135deg, #fff 0%, #71717a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .text-gradient-dark { 
+            background: linear-gradient(135deg, #18181b 0%, #71717a 50%, #18181b 100%); 
+            background-size: 200% 200%;
+            animation: gradientFlow 6s ease infinite;
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .text-gradient-blue { 
+            background: linear-gradient(135deg, #60a5fa 0%, #34d399 50%, #60a5fa 100%); 
+            background-size: 200% 200%;
+            animation: gradientFlow 6s ease infinite;
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bento-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+            will-change: transform;
+        }
+        .bento-card.light { background: #fff; border: 1px solid #e4e4e7; color: #000; }
+        .bento-card.light:hover { 
+            border-color: #a1a1aa; 
+            transform: translateY(-8px) scale(1.02); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
+        }
+
+        .ph-light, .ph-fill, .ph-bold { display: block; margin-bottom: 0; line-height: 1; }
+
+        .isometric-container {
+            perspective: 1200px; transform-style: preserve-3d; display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 4rem;
+        }
+        .iso-layer {
+            width: 100%; max-width: 500px; height: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; display: flex; align-items: center; padding: 0 2rem; transform: rotateX(55deg) rotateZ(-45deg); box-shadow: -20px 20px 30px rgba(0,0,0,0.5); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+        }
+        .iso-layer:hover { background: rgba(255,255,255,0.1); transform: rotateX(55deg) rotateZ(-45deg) translateZ(30px) scale(1.05); }
+
+        .h-scroll-trigger { height: 400vh; }
+        .h-scroll-container { height: 100vh; width: 100%; overflow: hidden; position: sticky; top: 0; background: #000; }
+        .h-scroll-track { display: flex; width: max-content; height: 100%; align-items: center; padding: 0 50vw; }
+        .step-panel {
+            width: 450px; height: 500px; margin-right: 2rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 3rem; display: flex; flex-direction: column; justify-content: flex-start;
+            transform-origin: center bottom;
+            will-change: transform;
+        }
+
+        .s5-canvas-grid {
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.6;
+        }
+        .s5-card-wrapper { perspective: 1200px; position: relative; z-index: 10; height: 100%; }
+        .s5-card {
+            transform-style: preserve-3d;
+            will-change: transform;
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+        }
+        .s5-card::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);
+            transform: rotate(45deg) translateY(-100%);
+            transition: transform 0.6s ease;
+            pointer-events: none;
+        }
+        .s5-card:hover::after { transform: rotate(45deg) translateY(100%); }
+        .s5-mouse-glow {
+            transition: transform 0.15s ease-out;
+            will-change: transform;
+        }
+        .blinking-cursor {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .s5-dummy-card {
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="h-screen flex flex-col justify-center items-center relative z-10" id="s1">
+        <div class="text-center">
+            <p class="text-sm font-semibold tracking-[0.3em] text-gray-500 mb-8 uppercase hero-sub">Presentation 2026</p>
+            <h1 class="text-[8vw] leading-none font-bold tracking-tighter text-gradient hero-title">Malleable Resume</h1>
+            <p class="text-2xl mt-8 text-gray-400 font-light tracking-tight hero-desc">你的下一份简历 为你而变</p>
+        </div>
+    </section>
+
+    <section class="min-h-screen bg-white text-black py-32 px-6 flex items-center rounded-t-[3rem] relative z-20" id="s2">
+        <div class="max-w-7xl mx-auto w-full">
+            <h2 class="text-6xl md:text-8xl font-bold tracking-tighter mb-24 max-w-5xl leading-tight fade-up">
+                实力出众<br><span class="text-gray-400">为什么总被错过</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bento-card light fade-up">
+                    <i class="ph-light ph-paper-plane-slash text-5xl text-gray-800 mb-6"></i>
+                    <h3 class="text-2xl font-bold mb-3">投得再多 不如投准</h3>
+                    <p class="text-gray-500">用同一份简历海投 能被看到的概率不到 10%</p>
+                </div>
+                <div class="bento-card light fade-up">
+                    <i class="ph-light ph-hourglass-high text-5xl text-gray-800 mb-6"></i>
+                    <h3 class="text-2xl font-bold mb-3">每次重写 实在太累</h3>
+                    <p class="text-gray-500">为了不同岗位反复修改 耗时耗力 毫无效率可言</p>
+                </div>
+                <div class="bento-card light fade-up">
+                    <i class="ph-light ph-eye-closed text-5xl text-gray-800 mb-6"></i>
+                    <h3 class="text-2xl font-bold mb-3">岗位要求 总是看走眼</h3>
+                    <p class="text-gray-500">抓不到 HR 的言外之意 一身才华用错了方向</p>
+                </div>
+                <div class="bento-card light fade-up">
+                    <i class="ph-light ph-folders text-5xl text-gray-800 mb-6"></i>
+                    <h3 class="text-2xl font-bold mb-3">简历太多 自己都找不着</h3>
+                    <p class="text-gray-500">电脑里塞满了最终版 真正要用时却是一团糟</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="min-h-screen bg-[#f5f5f7] text-black py-32 px-6 flex items-center relative z-10" id="s3">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="text-center mb-24 fade-up s3-header">
+                <h2 class="text-sm font-semibold tracking-widest text-gray-500 mb-4 uppercase">我们的答案</h2>
+                <h3 class="text-7xl font-bold tracking-tighter text-gradient-dark mb-6">可塑简历</h3>
+                <p class="text-2xl text-gray-500 max-w-3xl mx-auto">它不仅是一张纸 更是你通往理想工作的直达车</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-30" style="perspective: 1200px; transform-style: preserve-3d;">
+                <div class="bento-card light s3-card bg-white" style="transform-style: preserve-3d;">
+                    <h4 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                        <i class="ph-light ph-target text-3xl mb-0"></i> 瞄准目标
+                    </h4>
+                    <p class="text-gray-600">告诉它你想去哪里 AI 自动为你量身定做敲门砖</p>
+                </div>
+                <div class="bento-card light s3-card bg-black text-white border-0 shadow-2xl scale-105 z-10" style="transform-style: preserve-3d;">
+                    <h4 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                        <i class="ph-light ph-briefcase text-3xl mb-0"></i> 独一无二
+                    </h4>
+                    <p class="text-gray-300">告别群发 你的每一次投递 都是一次专属打造</p>
+                </div>
+                <div class="bento-card light s3-card bg-white" style="transform-style: preserve-3d;">
+                    <h4 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                        <i class="ph-light ph-sparkle text-3xl mb-0"></i> 机会翻倍
+                    </h4>
+                    <p class="text-gray-600">简历与岗位的契合度 瞬间飙升 3 到 5 倍</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 px-6 bg-white text-black relative z-20" id="s4">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-6xl font-bold tracking-tighter mb-20 fade-up">三大 AI 引擎<br>把复杂的变简单</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="border-t-2 border-black pt-8 fade-up">
+                    <h3 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                        <i class="ph-light ph-scan text-4xl mb-0"></i> 一键读取
+                    </h3>
+                    <p class="text-gray-500 mb-8">不管你丢给它 PDF Word 还是图片 它都能在一秒内看懂你的过去</p>
+                    <div class="text-6xl font-black tracking-tighter"><span class="counter" data-target="90" data-prefix=">">0</span>%</div>
+                    <div class="text-sm text-gray-400 mt-2 font-mono">精准识别率</div>
+                </div>
+                <div class="border-t-2 border-gray-300 pt-8 fade-up">
+                    <h3 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                        <i class="ph-light ph-magnifying-glass-plus text-4xl mb-0"></i> 洞察秋毫
+                    </h3>
+                    <p class="text-gray-500 mb-8">它会深度阅读招聘要求 一眼看穿 HR 真正关心的重点</p>
+                </div>
+                <div class="border-t-2 border-gray-300 pt-8 fade-up">
+                    <h3 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                        <i class="ph-light ph-magic-wand text-4xl mb-0"></i> 完美表达
+                    </h3>
+                    <p class="text-gray-500 mb-8">就算是你最普通的经历 它也能用最专业的口吻帮你讲出来</p>
+                    <div class="px-4 py-2 bg-gray-100 rounded-lg font-mono text-xl inline-block font-bold">6 种表达方式</div>
+                    <div class="text-sm text-gray-400 mt-2">长短口吻 任你挑选</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="min-h-screen bg-gray-100 text-black flex flex-col items-center justify-center relative overflow-hidden" id="s5">
+        
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-50" id="s5-dummy-wrapper" style="perspective: 1200px;">
+            <div class="s5-dummy-card absolute w-[300px] h-[200px] bg-white rounded-3xl shadow-2xl border border-gray-200 flex flex-col justify-center items-center gap-4 text-black">
+                <i class="ph-light ph-target text-4xl mb-0"></i><span class="font-bold text-xl">瞄准目标</span>
+            </div>
+            <div class="s5-dummy-card absolute w-[300px] h-[200px] bg-black rounded-3xl shadow-2xl border border-gray-800 flex flex-col justify-center items-center gap-4 text-white">
+                <i class="ph-light ph-briefcase text-4xl mb-0"></i><span class="font-bold text-xl">独一无二</span>
+            </div>
+            <div class="s5-dummy-card absolute w-[300px] h-[200px] bg-white rounded-3xl shadow-2xl border border-gray-200 flex flex-col justify-center items-center gap-4 text-black">
+                <i class="ph-light ph-sparkle text-4xl mb-0"></i><span class="font-bold text-xl">机会翻倍</span>
+            </div>
+        </div>
+
+        <div class="s5-actual-ui max-w-7xl mx-auto w-full px-6 opacity-0 relative z-10 pointer-events-none">
+            <div class="text-center mb-8">
+                <h2 class="text-5xl font-bold tracking-tighter mb-4">极简的工作台</h2>
+                <p class="text-xl text-gray-500">一眼就会 一拖即成</p>
+            </div>
+            
+            <div class="flex h-[600px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 text-left relative transition-all duration-700 ring-1 ring-black/5">
+                
+                <div class="w-1/4 bg-white/60 backdrop-blur-3xl border-r border-gray-200 p-6 flex flex-col z-30">
+                    <h4 class="font-bold mb-4 flex items-center gap-2"><i class="ph-light ph-tree-structure text-lg mb-0"></i> 你的大管家</h4>
+                    <p class="text-sm text-gray-500 mb-6">一份底稿 自动繁衍出无数份专属简历 再多也不乱</p>
+                    <div class="flex-1 space-y-3 pt-4 border-t border-gray-200 relative">
+                        <div class="s5-tree-item p-3 bg-gray-900 text-white rounded-xl text-sm font-medium shadow-md flex items-center gap-2">
+                            <i class="ph-light ph-file-text text-base mb-0"></i> 基础核心母版
+                        </div>
+                        <div class="s5-tree-item ml-4 p-2 bg-blue-50 text-blue-700 rounded-xl text-sm border border-blue-100 flex items-center gap-2 relative">
+                            <div class="absolute -left-4 top-1/2 w-3 h-px bg-gray-300"></div>
+                            <div class="absolute -left-4 -top-6 w-px h-10 bg-gray-300"></div>
+                            <i class="ph-light ph-git-branch text-base mb-0"></i> 交互设计衍生版
+                        </div>
+                        <div class="s5-tree-item ml-4 p-2 bg-gray-50 text-gray-600 rounded-xl text-sm border border-gray-200 flex items-center gap-2 relative">
+                            <div class="absolute -left-4 top-1/2 w-3 h-px bg-gray-300"></div>
+                            <div class="absolute -left-4 -top-8 w-px h-12 bg-gray-300"></div>
+                            <i class="ph-light ph-git-branch text-base mb-0"></i> 产品体验衍生版
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-1/2 p-8 bg-gray-50/50 relative overflow-hidden z-10 s5-center-board pointer-events-auto">
+                    <div class="s5-canvas-grid absolute inset-0"></div>
+                    <div class="s5-mouse-glow absolute w-96 h-96 bg-blue-400/20 rounded-full blur-[80px] pointer-events-none -top-48 -left-48 z-0"></div>
+                    
+                    <div class="relative z-20 h-full flex flex-col pointer-events-none">
+                        <h4 class="font-bold mb-2 text-center text-gray-800">你的创作画板</h4>
+                        <p class="text-sm text-gray-500 text-center mb-8">自由拖拽下方卡片 重新排列你的精彩人生</p>
+                        
+                        <div class="space-y-6 s5-card-wrapper flex-1 pointer-events-auto relative">
+                            <div class="h-8 bg-white/80 backdrop-blur-xl rounded-lg w-1/3 mx-auto shadow-sm ring-1 ring-black/5"></div>
+                            <div class="h-4 bg-white/80 backdrop-blur-xl rounded-full w-1/2 mx-auto mb-8 shadow-sm ring-1 ring-black/5"></div>
+                            
+                            <div class="s5-card p-5 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-lg ring-1 ring-black/5 cursor-grab absolute w-full top-24">
+                                <div class="h-4 bg-gray-200 rounded-full w-1/4 mb-4"></div>
+                                <div class="h-2 bg-gray-100 rounded-full w-full mb-3"></div>
+                                <div class="h-2 bg-gray-100 rounded-full w-5/6"></div>
+                            </div>
+                            
+                            <div class="s5-card p-5 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-lg ring-1 ring-blue-500/20 cursor-grab absolute w-full top-56 overflow-hidden">
+                                <div class="absolute left-0 top-0 w-1.5 h-full bg-blue-500"></div>
+                                <div class="absolute right-0 top-0 w-24 h-full bg-gradient-to-l from-blue-50 to-transparent opacity-60 pointer-events-none"></div>
+                                <div class="h-4 bg-gray-200 rounded-full w-1/3 mb-4"></div>
+                                <div class="h-2 bg-blue-50 rounded-full w-full mb-3"></div>
+                                <div class="h-2 bg-blue-50 rounded-full w-4/5"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-1/4 bg-gray-900 text-white p-6 flex flex-col z-30 shadow-2xl">
+                    <h4 class="font-bold mb-4 flex items-center gap-2"><i class="ph-light ph-robot text-lg mb-0 text-blue-400"></i> 你的贴身顾问</h4>
+                    <p class="text-sm text-gray-400 mb-6">实时交互系统 随时为你润色细节</p>
+                    
+                    <div class="flex-1 space-y-5 pt-4 border-t border-gray-800 flex flex-col justify-end relative">
+                        <div class="s5-chat-bubble-1 p-4 bg-gray-800/80 backdrop-blur-md rounded-2xl rounded-tl-sm text-xs text-gray-300 self-start w-[90%] ring-1 ring-white/10 origin-bottom-left min-h-[3rem] flex items-center">
+                            <span id="s5-text-1"></span><span class="blinking-cursor">|</span>
+                        </div>
+                        <div class="s5-chat-bubble-2 p-4 bg-blue-600 rounded-2xl rounded-tr-sm text-xs text-white self-end w-[90%] shadow-lg shadow-blue-500/30 origin-bottom-right relative min-h-[4rem] flex items-center">
+                            <div class="s5-thinking-dots flex gap-1 absolute top-1/2 left-4 -translate-y-1/2 opacity-0">
+                                <div class="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                                <div class="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                <div class="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            </div>
+                            <span id="s5-text-2"></span>
+                        </div>
+                        <div class="s5-chat-bubble-3 p-4 bg-gray-800/80 backdrop-blur-md rounded-2xl rounded-tl-sm text-xs text-blue-300 self-start w-[90%] ring-1 ring-blue-500/30 flex items-center gap-3 origin-bottom-left opacity-0">
+                            <i class="ph-fill ph-magic-wand mb-0 text-blue-400 text-lg"></i> 已自动为你改写完毕
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 px-6 bg-black relative z-10" id="s6">
+        
+        <div id="s6-flying-plane" class="absolute z-50 pointer-events-none" style="top: 80%; left: -20vw;">
+            <div class="relative w-48 h-48 drop-shadow-[0_20px_40px_rgba(255,255,255,0.4)]">
+                <div class="absolute top-1/2 left-0 w-[300px] h-3 bg-gradient-to-r from-transparent via-blue-500/50 to-white/80 blur-md -translate-y-1/2 -translate-x-[85%] -rotate-[20deg] rounded-full"></div>
+                <div class="absolute top-1/2 left-0 w-[150px] h-1 bg-gradient-to-r from-transparent to-white blur-sm -translate-y-1/2 -translate-x-[90%] -rotate-[20deg] rounded-full"></div>
+                
+                <svg viewBox="0 0 100 100" class="w-full h-full relative z-10" style="transform: rotate(20deg);">
+                    <polygon points="40,60 100,0 50,80" fill="#a1a1aa" />
+                    <polygon points="40,60 100,0 80,100" fill="#e4e4e7" />
+                    <polygon points="0,50 100,0 40,60" fill="#ffffff" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div class="fade-up relative z-20">
+                <h2 class="text-5xl font-bold tracking-tighter mb-6">强大<br>却极其轻巧</h2>
+                <p class="text-xl text-gray-400 mb-8">抛弃繁杂的冗余 我们用最纯粹的技术 为你打造无与伦比的极速体验</p>
+            </div>
+            
+            <div class="isometric-container relative z-10">
+                <div class="iso-layer iso-ui">
+                    <span class="font-mono text-blue-400 w-24">界面层</span>
+                    <span class="text-sm text-gray-300">纯净的前端代码 如丝般顺滑地响应你的每一次点击</span>
+                </div>
+                <div class="iso-layer iso-core">
+                    <span class="font-mono text-green-400 w-24">引擎层</span>
+                    <span class="text-sm text-gray-300">完全自主研发的核心逻辑 动力澎湃</span>
+                </div>
+                <div class="iso-layer iso-storage">
+                    <span class="font-mono text-yellow-400 w-24">隐私层</span>
+                    <span class="text-sm text-gray-300">你的所有信息只存在你的设备里 绝对安全</span>
+                </div>
+                <div class="iso-layer iso-backend">
+                    <span class="font-mono text-purple-400 w-24">后台层</span>
+                    <span class="text-sm text-gray-300">告别臃肿 用最轻盈的方式为你连接世界</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 px-6 bg-[#0a0a0a]" id="s78">
+        <div class="max-w-7xl mx-auto space-y-32">
+            <div class="fade-up">
+                <h2 class="text-4xl font-bold tracking-tighter mb-4 text-center">天生快 且无处不在</h2>
+                <p class="text-gray-500 text-center mb-16">我们不盲目追逐热门技术 只选择最适合你的</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="bento-card text-center"><h4 class="font-bold mb-2">无格式阻碍</h4><p class="text-xs text-gray-400">PDF Word 通通不在话下</p></div>
+                    <div class="bento-card text-center"><h4 class="font-bold mb-2">绝对隐私</h4><p class="text-xs text-gray-400">信息绝不上传 守护你的安全</p></div>
+                    <div class="bento-card text-center"><h4 class="font-bold mb-2">指尖魔法</h4><p class="text-xs text-gray-400">拖拽体验 顺滑自然</p></div>
+                    <div class="bento-card text-center"><h4 class="font-bold mb-2">轻装上阵</h4><p class="text-xs text-gray-400">极简架构 快人一步</p></div>
+                </div>
+            </div>
+
+            <div class="bento-card fade-up border-gray-800 bg-gray-900/50">
+                <div class="flex flex-col md:flex-row gap-12 items-center">
+                    <div class="md:w-1/3">
+                        <h2 class="text-3xl font-bold tracking-tighter mb-4">一颗聪明的开放大脑</h2>
+                        <p class="text-sm text-gray-400 mb-6">默认搭载顶尖的 DeepSeek 引擎 当然你也可以随时无缝切换到其他你喜欢的 AI</p>
+                    </div>
+                    <div class="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-sm">
+                        <div class="p-4 bg-black rounded-lg border border-gray-800"><span class="text-green-500">超速</span> 读取经历</div>
+                        <div class="p-4 bg-black rounded-lg border border-gray-800"><span class="text-green-500">超速</span> 洞察要求</div>
+                        <div class="p-4 bg-black rounded-lg border border-gray-800"><span class="text-green-500">超速</span> 智能改写</div>
+                        <div class="p-4 bg-black rounded-lg border border-gray-800"><span class="text-green-500">超速</span> 极简润色</div>
+                        <div class="p-4 bg-black rounded-lg border border-gray-800"><span class="text-green-500">实时</span> 智能对话</div>
+                        <div class="p-4 bg-black rounded-lg border border-gray-800"><span class="text-gray-500">一切 都在瞬间完成</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="h-scroll-trigger">
+        <section class="h-scroll-container">
+            <div class="absolute top-20 left-1/2 -translate-x-1/2 text-center w-full z-10">
+                <h2 class="text-5xl font-bold tracking-tighter text-white">只要 5 秒 大功告成</h2>
+                <p class="text-gray-400 mt-4">跟随直觉 向右滑动 看看魔法是如何发生的</p>
+            </div>
+            
+            <div class="h-scroll-track">
+                <div class="step-panel border-blue-900/30 bg-blue-900/10">
+                    <h3 class="text-3xl font-bold mb-8 text-blue-400">一切都井井有条</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <span class="px-2 py-1 bg-white text-black text-xs font-bold rounded">你的底稿 母版</span>
+                            <p class="text-sm text-gray-400 mt-2">在这里存放你的所有基础信息 安全稳固</p>
+                        </div>
+                        <div class="pl-6 border-l-2 border-gray-700">
+                            <span class="px-2 py-1 bg-gray-800 text-white text-xs font-bold rounded border border-gray-600">定制版 衍生版</span>
+                            <p class="text-sm text-gray-400 mt-2">根据不同岗位自动生成 怎么改都不会弄乱你的底稿</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-panel step-item"><span class="text-6xl font-black text-gray-800 mb-4">01</span><h3 class="text-2xl font-bold mb-2">丢入简历</h3><p class="text-gray-400">什么格式都行 全在本地处理 没人看得到你的隐私</p></div>
+                <div class="step-panel step-item"><span class="text-6xl font-black text-gray-800 mb-4">02</span><h3 class="text-2xl font-bold mb-2">AI 归纳</h3><p class="text-gray-400">瞬间提取你的闪光点 整整齐齐排好队</p></div>
+                <div class="step-panel step-item"><span class="text-6xl font-black text-gray-800 mb-4">03</span><h3 class="text-2xl font-bold mb-2">告诉它你想去哪</h3><p class="text-gray-400">把想申请的岗位描述贴进来</p></div>
+                <div class="step-panel step-item"><span class="text-6xl font-black text-gray-800 mb-4">04</span><h3 class="text-2xl font-bold mb-2">洞察考点</h3><p class="text-gray-400">它会立刻告诉你 对方到底想要什么样的人</p></div>
+                <div class="step-panel step-item"><span class="text-6xl font-black text-gray-800 mb-4">05</span><h3 class="text-2xl font-bold mb-2">一键变身</h3><p class="text-gray-400">点击生成 你的经历自动变为 HR 最想看到的样子</p></div>
+                <div class="step-panel step-item"><span class="text-6xl font-black text-gray-800 mb-4">06</span><h3 class="text-2xl font-bold mb-2">妥善保存</h3><p class="text-gray-400">一份专为这个岗位准备的简历 完美存档</p></div>
+                <div class="step-panel step-item"><span class="text-6xl font-black text-gray-800 mb-4">07</span><h3 class="text-2xl font-bold mb-2">准备出发</h3><p class="text-gray-400">导出精美的高清 PDF 去拿属于你的 Offer 吧</p></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="py-32 px-6 bg-white text-black" id="s10">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-5xl font-bold tracking-tighter mb-16 text-center fade-up">为什么选可塑简历</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-8 bg-gray-50 rounded-3xl border border-gray-200 fade-up text-center">
+                    <h3 class="text-xl font-bold mb-2 text-gray-400">传统工具</h3>
+                    <p class="text-lg">只给你好看的皮囊</p>
+                </div>
+                <div class="p-8 bg-gray-50 rounded-3xl border border-gray-200 fade-up text-center">
+                    <h3 class="text-xl font-bold mb-2 text-gray-400">普通 AI</h3>
+                    <p class="text-lg">只给你千篇一律的废话</p>
+                </div>
+                <div class="p-8 bg-black text-white rounded-3xl fade-up shadow-2xl relative z-10">
+                    <h3 class="text-2xl font-bold mb-6 text-gradient-blue text-center">Malleable Resume</h3>
+                    <ul class="space-y-4">
+                        <li><strong class="text-blue-400">极其精准 </strong>看着对方给的考卷 为你写满分的答案</li>
+                        <li><strong class="text-blue-400">绝对自由 </strong>想怎么排版就怎么排版 彻底释放你的控制欲</li>
+                        <li><strong class="text-blue-400">千人千面 </strong>保留你最真实的灵魂 绝不像机器写的</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 px-6 bg-[#f5f5f7] text-black text-center" id="s11-12">
+        <div class="max-w-5xl mx-auto space-y-32">
+            <div class="grid grid-cols-2 gap-y-16 fade-up">
+                <div><div class="text-6xl md:text-8xl font-black tracking-tighter"><span class="counter" data-target="90" data-prefix=">">0</span>%</div><p class="text-gray-500 mt-4">内容读取 一字不差</p></div>
+                <div><div class="text-6xl md:text-8xl font-black tracking-tighter"><span class="counter" data-target="100">0</span>%</div><p class="text-gray-500 mt-4">岗位要求 完全懂你</p></div>
+                <div><div class="text-6xl md:text-8xl font-black tracking-tighter"><span class="counter" data-target="5" data-prefix="<">0</span>s</div><p class="text-gray-500 mt-4">生成速度 快如闪电</p></div>
+                <div><div class="text-6xl md:text-8xl font-black tracking-tighter text-blue-600"><span class="counter" data-target="5" data-prefix="3x-">0</span>x</div><p class="text-gray-500 mt-4">求职效率 全速狂飙</p></div>
+            </div>
+
+            <div class="border-t border-gray-300 pt-32 fade-up">
+                <h2 class="text-4xl font-bold tracking-tighter mb-4">用最少的代码 做最多的事</h2>
+                <p class="text-gray-500 mb-16">这是我们对极致的追求</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <div class="text-5xl font-mono font-bold mb-2"><span class="counter" data-target="6000" data-prefix="~">0</span></div>
+                        <p class="text-sm text-gray-500">行纯净代码<br>轻快无比</p>
+                    </div>
+                    <div>
+                        <div class="text-5xl font-mono font-bold mb-2"><span class="counter" data-target="800" data-prefix="~">0</span></div>
+                        <p class="text-sm text-gray-500">行核心逻辑<br>化繁为简</p>
+                    </div>
+                    <div>
+                        <div class="text-5xl font-mono font-bold mb-2"><span class="counter" data-target="6">0</span></div>
+                        <p class="text-sm text-gray-500">条精简通道<br>四通八达</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 px-6 bg-black text-white" id="s13">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-5xl font-bold tracking-tighter mb-20 text-center fade-up">精彩 才刚刚开始</h2>
+            <div class="flex flex-col md:flex-row gap-6 relative">
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-px bg-gray-800 -translate-y-1/2 z-0"></div>
+                
+                <div class="flex-1 bento-card border-gray-800 bg-black z-10 fade-up">
+                    <span class="text-blue-500 font-mono text-sm">就在近期</span>
+                    <h3 class="text-2xl font-bold mt-2 mb-4">打破边界</h3>
+                    <p class="text-gray-400 text-sm">极速全局搜索 再多的人生经历 也能瞬间装下</p>
+                </div>
+                <div class="flex-1 bento-card border-gray-800 bg-black z-10 fade-up" style="transition-delay: 0.1s;">
+                    <span class="text-purple-500 font-mono text-sm">正在赶来</span>
+                    <h3 class="text-2xl font-bold mt-2 mb-4">美感与智慧</h3>
+                    <p class="text-gray-400 text-sm">自动排版让你更好看 精准跑分告诉你拿下 Offer 的几率有多大</p>
+                </div>
+                <div class="flex-1 bento-card border-gray-800 bg-black z-10 fade-up" style="transition-delay: 0.2s;">
+                    <span class="text-emerald-500 font-mono text-sm">面向未来</span>
+                    <h3 class="text-2xl font-bold mt-2 mb-4">你的全能搭档</h3>
+                    <p class="text-gray-400 text-sm">连求职信都帮你写好 甚至主动把最好的工作推到你面前</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="min-h-screen bg-black text-white flex flex-col justify-center items-center relative overflow-hidden" id="cta">
+        
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-blue-600/15 rounded-full blur-[150px] pointer-events-none"></div>
+
+        <div class="max-w-4xl mx-auto px-6 text-center z-10">
+            
+            <h2 class="text-5xl md:text-7xl font-bold tracking-tighter mb-8 leading-[1.1] fade-up">
+                准备好<br>重塑你的未来了吗
+            </h2>
+            
+            <p class="text-xl text-gray-400 mb-16 max-w-xl mx-auto font-light tracking-wide fade-up">
+                不要让平庸的格式掩盖了你的光芒 现在就开始打造你的专属可塑简历
+            </p>
+
+            <div class="fade-up relative inline-block group cursor-pointer">
+                <div class="absolute -inset-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur-xl opacity-50 group-hover:opacity-90 transition duration-700"></div>
+                <a href="https://pengx1ang.github.io/malleable-resume/test3.html" class="relative px-12 py-6 bg-white text-black text-2xl font-bold rounded-full transform group-hover:scale-[1.03] transition-all duration-500 flex items-center gap-4" style="text-decoration: none; cursor: pointer;">
+                    开始体验 <i class="ph-bold ph-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-[#0a0a0a] py-8 text-center text-gray-600 text-sm border-t border-white/5 relative z-10">
+        weiwei老师的神奇妙妙屋 创造于同济大学设计创意学院
+    </footer>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger, TextPlugin, Draggable);
+
+        gsap.timeline({ scrollTrigger: { trigger: "#s1", start: "top top", end: "+=80%", scrub: 1, pin: true } })
+        .to(".hero-title", { scale: 3, opacity: 0, ease: "power1.inOut" }, 0)
+        .to(".hero-sub", { y: -50, opacity: 0 }, 0)
+        .to(".hero-desc", { y: 50, opacity: 0 }, 0);
+
+        gsap.utils.toArray('.fade-up').forEach(element => {
+            gsap.from(element, { scrollTrigger: { trigger: element, start: "top 85%" }, y: 60, opacity: 0, filter: "blur(12px)", duration: 1.4, ease: "expo.out" });
+        });
+
+        // 彻底修复带有符号的数字滚动动画 使用 proxy 对象避免字符串解析错误
+        gsap.utils.toArray('.counter').forEach(el => {
+            let target = parseFloat(el.getAttribute('data-target'));
+            let prefix = el.getAttribute('data-prefix') || '';
+            let proxy = { val: 0 };
+            
+            gsap.to(proxy, {
+                val: target, 
+                duration: 2.5, 
+                ease: "power3.out", 
+                scrollTrigger: { trigger: el, start: "top 85%" }, 
+                onUpdate: function() { 
+                    el.innerHTML = prefix + Math.floor(proxy.val); 
+                }
+            });
+        });
+
+        gsap.to(".s3-card", {
+            scrollTrigger: {
+                trigger: "#s3",
+                start: "center center",
+                end: "bottom top",
+                scrub: 1.5
+            },
+            y: 800,
+            z: -1000,
+            x: (i) => (1 - i) * 300,
+            rotationZ: (i) => (i === 0 ? -25 : i === 2 ? 25 : Math.random() * 10 - 5),
+            rotationX: 70,
+            scale: 0.1,
+            opacity: 0,
+            ease: "power1.in"
+        });
+
+        let tlS5 = gsap.timeline({ 
+            scrollTrigger: { trigger: "#s5", start: "top top", end: "+=300%", pin: true, scrub: 1 } 
+        });
+
+        gsap.set(".s5-actual-ui", { opacity: 0, scale: 0.8, rotationX: 45, transformPerspective: 2000 });
+        gsap.set(".s5-dummy-card", { y: -1000, opacity: 0, rotationZ: (i) => (i - 1) * -30 });
+
+        tlS5.to(".s5-dummy-card", { y: (i) => i * 15 - 15, rotationZ: (i) => (i - 1) * 6, opacity: 1, duration: 1, stagger: 0.1, ease: "power3.out" })
+        .to(".s5-dummy-card", { duration: 0.5 })
+        .to(".s5-dummy-card", { scale: 3, y: (i) => (i - 1) * 300, x: (i) => (i - 1) * 600, rotationY: 180, rotationZ: (i) => (i - 1) * 45, opacity: 0, duration: 1.5, ease: "power2.inOut" }, "morph")
+        .to(".s5-actual-ui", { opacity: 1, scale: 1, rotationX: 0, duration: 1.5, ease: "power2.inOut" }, "morph+=0.2")
+        .fromTo(".s5-tree-item", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.1 }, "ui-build")
+        .fromTo(".s5-card", { y: 40, opacity: 0, rotationX: 10 }, { y: 0, opacity: 1, rotationX: 0, duration: 0.5, stagger: 0.1 }, "ui-build+=0.2")
+        .fromTo(".s5-chat-bubble-1", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4 })
+        .to("#s5-text-1", { text: "正在深度分析岗位潜台词", duration: 0.8 })
+        .to(".blinking-cursor", { opacity: 0, duration: 0.1 })
+        .fromTo(".s5-chat-bubble-2", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4 })
+        .to(".s5-thinking-dots", { opacity: 1, duration: 0.2 })
+        .to(".s5-thinking-dots", { opacity: 0, duration: 0.2 }, "+=0.4")
+        .to("#s5-text-2", { text: "建议将情感计算的项目经历置顶 这与 HR 关注的核心能力完美契合", duration: 1.5 })
+        .fromTo(".s5-chat-bubble-3", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4 });
+
+        Draggable.create(".s5-card.cursor-grab", {
+            type: "x,y", bounds: ".s5-center-board", edgeResistance: 0.65,
+            onPress: function() { gsap.to(this.target, {scale: 1.05, rotationX: 0, rotationY: 0, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", duration: 0.3, ease: "power2.out", zIndex: 100}); },
+            onRelease: function() { gsap.to(this.target, {scale: 1, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", duration: 0.5, ease: "elastic.out(1, 0.5)", zIndex: 10}); }
+        });
+
+        const board = document.querySelector('.s5-center-board');
+        const glow = document.querySelector('.s5-mouse-glow');
+        if(board && glow) {
+            board.addEventListener('mousemove', e => {
+                const rect = board.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                gsap.to(glow, { x: x, y: y, duration: 0.6, ease: "power2.out" });
+            });
+        }
+
+        gsap.from(".iso-layer", { scrollTrigger: { trigger: ".isometric-container", start: "top 70%" }, z: -300, y: -80, opacity: 0, rotationX: 20, duration: 1.5, stagger: 0.2, ease: "expo.out" });
+
+        let flightPath = gsap.timeline({ scrollTrigger: { trigger: "#s6", start: "top 80%", end: "bottom 20%", scrub: 1 } });
+        flightPath.to("#s6-flying-plane", { x: "150vw", y: "-100vh", rotationZ: 30, rotationX: 45, scale: 0.4, ease: "power2.inOut" });
+
+        let panels = gsap.utils.toArray(".step-panel");
+        gsap.to(panels, { xPercent: -100 * (panels.length - 1), ease: "none", scrollTrigger: { trigger: ".h-scroll-trigger", start: "top top", end: "bottom bottom", scrub: 1 } });
+
+        let proxySkew = { skew: 0 }, skewSetter = gsap.quickSetter(".step-panel", "skewX", "deg"), clamp = gsap.utils.clamp(-12, 12);
+        ScrollTrigger.create({
+            trigger: ".h-scroll-trigger",
+            onUpdate: (self) => {
+                let skew = clamp(self.getVelocity() / -200);
+                if (Math.abs(skew) > Math.abs(proxySkew.skew)) {
+                    proxySkew.skew = skew;
+                    gsap.to(proxySkew, { skew: 0, duration: 0.8, ease: "elastic.out(1, 0.8)", overwrite: true, onUpdate: () => skewSetter(proxySkew.skew) });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
