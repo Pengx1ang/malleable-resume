@@ -888,48 +888,7 @@
             animation: ai-pulse 3s ease-in-out infinite;
             pointer-events: none;
         }
-        /* AI 高亮框光晕流动效果 */
-        .ai-highlight {
-            position: relative;
-            overflow: visible;
-        }
-        .ai-highlight::after {
-            content: '';
-            position: absolute;
-            inset: -1px;
-            border-radius: 8px;
-            background: linear-gradient(90deg,
-                transparent 0%,
-                rgba(168, 85, 247, 0.2) 25%,
-                rgba(147, 51, 234, 0.3) 50%,
-                rgba(168, 85, 247, 0.2) 75%,
-                transparent 100%);
-            background-size: 200% 100%;
-            animation: ai-glow-flow 4s linear infinite;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        .ai-highlight:hover::after {
-            opacity: 1;
-        }
-        @keyframes ai-glow-flow {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        @keyframes ai-pulse {
-            0%, 100% { opacity: 0; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.02); }
-        }
-        /* 页面加载渐入动画 */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        /* AI 高亮框光晕流动效果 - 简化版本，hover 时显示 */
         .ai-highlight:hover {
             background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
             border-color: #c084fc;
@@ -938,25 +897,26 @@
                 inset 0 0 0 1px rgba(255,255,255,0.5);
             transform: translateY(-1px);
         }
-        /* 添加提示标签 - 完整操作说明 */
+        /* 添加提示标签 - 完整操作说明（使用 ::after 伪元素） */
         .ai-highlight::after {
-            content: '✏️ 单击编辑 | ↕️ 滚动改话术 | ↔️ 拖拽调长短 | ⌨️ Alt+ 点击溯源';
+            content: '单击编辑  滚动改话术  拖拽调长短  Alt+ 点击溯源';
             position: absolute;
-            top: -28px;
+            top: -26px;
             left: 50%;
             transform: translateX(-50%) translateY(4px);
             background: #1e293b;
-            color: white;
+            color: #e2e8f0;
             font-size: 10px;
             font-weight: 500;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
             opacity: 0;
             pointer-events: none;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             z-index: 10000;
+            letter-spacing: 0.5px;
         }
         .ai-highlight:hover::after {
             opacity: 1;
