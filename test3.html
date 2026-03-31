@@ -3778,7 +3778,13 @@
         function updateScale() {
             const container = document.getElementById('canvas-container');
             const paper = document.getElementById('resume-paper');
-            if (!container || !paper) return;
+            console.log('[updateScale] container:', container ? '存在' : '不存在', 'paper:', paper ? '存在' : '不存在');
+            console.log('[updateScale] isStyleEditMode:', isStyleEditMode, 'isPreviewMode:', isPreviewMode, 'isManualZoom:', isManualZoom, 'currentZoom:', currentZoom);
+
+            if (!container || !paper) {
+                console.error('[updateScale] container 或 paper 不存在');
+                return;
+            }
 
             // 在预览模式或样式编辑模式下启用缩放
             if (isPreviewMode || isStyleEditMode) {
@@ -3786,6 +3792,7 @@
                 if (isStyleEditMode && !isManualZoom) {
                     // 样式编辑模式且未手动缩放：自适应缩放至刚好看到全貌
                     scale = Math.min((container.clientWidth - 40) / 820, (container.clientHeight - 80) / 1160, 1);
+                    console.log('[updateScale] 自动缩放 scale:', scale);
                     // 更新滑块位置
                     const zoomSlider = document.getElementById('zoom-slider');
                     const zoomValue = document.getElementById('zoom-value');
@@ -3797,9 +3804,11 @@
                 } else {
                     // 手动缩放模式或预览模式
                     scale = currentZoom / 100;
+                    console.log('[updateScale] 手动缩放 scale:', scale);
                 }
                 paper.style.transform = `scale(${scale})`;
                 paper.style.marginBottom = `-${1160 * (1 - scale)}px`;
+                console.log('[updateScale] 已应用 transform:', paper.style.transform, 'marginBottom:', paper.style.marginBottom);
             } else {
                 paper.style.transform = 'scale(1)';
                 paper.style.marginBottom = '0';
