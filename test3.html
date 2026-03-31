@@ -3775,14 +3775,14 @@
         }
 
         let isPreviewMode = false;
-        const container = document.getElementById('canvas-container');
-        const paper = document.getElementById('resume-paper');
-
-        // 缩放控制
         let currentZoom = 100; // 当前缩放百分比
         let isManualZoom = false; // 是否手动缩放
 
         function updateScale() {
+            const container = document.getElementById('canvas-container');
+            const paper = document.getElementById('resume-paper');
+            if (!container || !paper) return;
+
             // 在预览模式或样式编辑模式下启用缩放
             if (isPreviewMode || isStyleEditMode) {
                 let scale;
@@ -3810,16 +3810,18 @@
         }
         window.addEventListener('resize', updateScale);
 
-        // 缩放滑块事件
-        const zoomSlider = document.getElementById('zoom-slider');
-        const zoomValue = document.getElementById('zoom-value');
-        if (zoomSlider && zoomValue) {
-            zoomSlider.addEventListener('input', (e) => {
-                currentZoom = parseInt(e.target.value);
-                zoomValue.textContent = currentZoom + '%';
-                isManualZoom = true; // 标记为手动缩放
-                updateScale();
-            });
+        // 初始化缩放滑块事件（在 DOM 加载后由 initStyleEditMode 调用）
+        function initZoomSlider() {
+            const zoomSlider = document.getElementById('zoom-slider');
+            const zoomValue = document.getElementById('zoom-value');
+            if (zoomSlider && zoomValue) {
+                zoomSlider.addEventListener('input', (e) => {
+                    currentZoom = parseInt(e.target.value);
+                    zoomValue.textContent = currentZoom + '%';
+                    isManualZoom = true; // 标记为手动缩放
+                    updateScale();
+                });
+            }
         }
 
         // 注意："定稿预览"按钮事件已移至 initStyleEditMode 函数中
@@ -6993,6 +6995,9 @@
             const templateFileInput = document.getElementById('template-file-input');
 
             console.log('[初始化] 样式编辑模式已初始化');
+
+            // 初始化缩放滑块
+            initZoomSlider();
 
             // 点击"浏览模式"按钮进入样式编辑模式
             btnTogglePreview.addEventListener('click', () => {
