@@ -640,11 +640,20 @@
             display: block;
         }
 
-        /* 图片模块样式 */
+        /* 图片模块样式 - 自由拖拽版本 */
         .resume-image-section {
-            margin-top: 16px;
-            margin-bottom: 16px;
-            position: relative;
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+        }
+        .resume-image-section.dragging {
+            opacity: 0.5;
+            z-index: 9999;
+        }
+        .resume-image-section.selected {
+            outline: 2px solid var(--color-primary-500);
+            outline-offset: 2px;
         }
         .resume-image-section:hover .image-controls {
             opacity: 1;
@@ -652,24 +661,25 @@
         .resume-image-container {
             position: relative;
             display: inline-block;
-            max-width: 100%;
         }
         .resume-image-section img {
             display: block;
-            max-width: 100%;
+            width: 100%;
             height: auto;
             border-radius: 4px;
+            pointer-events: none; /* 避免图片本身响应拖拽 */
         }
         .resume-image-section .image-caption {
             font-size: var(--text-sm);
             color: var(--color-neutral-500);
             text-align: center;
-            margin-top: 8px;
+            margin-top: 4px;
+            pointer-events: none;
         }
         .image-controls {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: -36px;
+            right: 0;
             display: flex;
             gap: 4px;
             opacity: 0;
@@ -679,6 +689,10 @@
             padding: 4px;
             border-radius: 6px;
             box-shadow: var(--shadow-md);
+            z-index: 10;
+        }
+        .image-controls.visible {
+            opacity: 1;
         }
         .image-control-btn {
             width: 28px;
@@ -745,6 +759,74 @@
             background: var(--color-primary-500);
             border-color: var(--color-primary-500);
             color: white;
+        }
+
+        /* 8 向调整大小手柄 */
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border: 2px solid var(--color-primary-500);
+            border-radius: 50%;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .resume-image-section.selected .resize-handle {
+            opacity: 1;
+        }
+        .resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
+        .resize-handle.n { top: -5px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+        .resize-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
+        .resize-handle.e { top: 50%; right: -5px; transform: translateY(-50%); cursor: e-resize; }
+        .resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
+        .resize-handle.s { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+        .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+        .resize-handle.w { top: 50%; left: -5px; transform: translateY(-50%); cursor: w-resize; }
+
+        /* 拖拽幽灵元素 */
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            box-shadow: var(--shadow-2xl);
+            transform: scale(1.02);
+            z-index: 10000;
+            opacity: 0.9;
+        }
+
+        /* 吸附指示线 */
+        .snap-guide {
+            position: absolute;
+            background: var(--color-primary-500);
+            pointer-events: none;
+            z-index: 9998;
+        }
+        .snap-guide.horizontal {
+            height: 1px;
+            width: 100%;
+        }
+        .snap-guide.vertical {
+            width: 1px;
+            height: 100%;
+        }
+
+        /* 文字环绕样式 */
+        .resume-image-section.float-left {
+            float: left;
+            margin-right: 16px;
+            margin-bottom: 16px;
+        }
+        .resume-image-section.float-right {
+            float: right;
+            margin-left: 16px;
+            margin-bottom: 16px;
+        }
+        .resume-text-line::after,
+        .resume-bullet-list::after {
+            content: "";
+            display: table;
+            clear: both;
         }
 
         /* --- 3. 吸顶排版工作台 --- */
@@ -8677,20 +8759,39 @@
         }
 
         // 添加图片到简历
-        function addImageToResume(imageId, src, caption) {
+        function addImageToResume(imageId, src, caption, x = 50, y = 50, width = 200, zIndex = 1) {
             const resumeContent = document.getElementById('resume-content');
             if (!resumeContent) return;
 
             const imageSection = document.createElement('div');
             imageSection.className = 'resume-image-section';
             imageSection.dataset.imageId = imageId;
+            imageSection.style.left = x + 'px';
+            imageSection.style.top = y + 'px';
+            imageSection.style.width = width + 'px';
+            imageSection.style.zIndex = zIndex;
             imageSection.innerHTML = `
                 <div class="resume-image-container">
-                    <img src="${src}" alt="${caption || '插入的图片'}" style="width: 100%;">
+                    <img src="${src}" alt="${caption || '插入的图片'}">
+                    <!-- 8 向调整手柄 -->
+                    <div class="resize-handle nw" data-handle="nw"></div>
+                    <div class="resize-handle n" data-handle="n"></div>
+                    <div class="resize-handle ne" data-handle="ne"></div>
+                    <div class="resize-handle e" data-handle="e"></div>
+                    <div class="resize-handle se" data-handle="se"></div>
+                    <div class="resize-handle s" data-handle="s"></div>
+                    <div class="resize-handle sw" data-handle="sw"></div>
+                    <div class="resize-handle w" data-handle="w"></div>
+                    <!-- 控制按钮 -->
                     <div class="image-controls">
-                        <button class="image-control-btn" title="调整大小" onclick="toggleImageSizeControl(this)">
+                        <button class="image-control-btn" title="文字环绕" onclick="toggleImageFloat(this)">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h8"/>
+                            </svg>
+                        </button>
+                        <button class="image-control-btn" title="层级" onclick="toggleImageLayerMenu(this)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                             </svg>
                         </button>
                         <button class="image-control-btn delete" title="删除" onclick="deleteImage(this)">
@@ -8701,59 +8802,411 @@
                     </div>
                 </div>
                 ${caption ? `<div class="image-caption">${caption}</div>` : ''}
-                <div class="image-size-control hidden">
-                    <label>宽度</label>
-                    <input type="range" min="20" max="100" value="100" oninput="adjustImageWidth(this)">
-                    <span class="image-size-value">100%</span>
-                </div>
-                <div class="image-size-preset">
-                    <button onclick="setImagePreset(this, 25)">25%</button>
-                    <button onclick="setImagePreset(this, 50)">50%</button>
-                    <button onclick="setImagePreset(this, 75)">75%</button>
-                    <button onclick="setImagePreset(this, 100)" class="active">100%</button>
-                </div>
             `;
 
             resumeContent.appendChild(imageSection);
+
+            // 绑定该图片的拖拽和选中事件
+            bindImageEvents(imageSection);
         }
 
-        // 切换尺寸控制显示
-        window.toggleImageSizeControl = function(btn) {
+        // ═══════════════════════════════════════════════════════════
+        // 🖼️ 图片拖拽和调整大小核心逻辑
+        // ═══════════════════════════════════════════════════════════
+
+        let selectedImage = null;
+        let isDragging = false;
+        let isResizing = false;
+        let dragGhost = null;
+        let dragOffset = { x: 0, y: 0 };
+        let snapLines = [];
+
+        // 绑定图片事件
+        function bindImageEvents(imageSection) {
+            // 选中图片
+            imageSection.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectImage(imageSection);
+            });
+
+            // 开始拖拽（在图片主体上）
+            const imgContainer = imageSection.querySelector('.resume-image-container');
+            if (imgContainer) {
+                imgContainer.addEventListener('pointerdown', (e) => startDrag(e, imageSection));
+            }
+
+            // 开始调整大小（8 个手柄）
+            const resizeHandles = imageSection.querySelectorAll('.resize-handle');
+            resizeHandles.forEach(handle => {
+                handle.addEventListener('pointerdown', (e) => startResize(e, imageSection));
+            });
+        }
+
+        // 选中图片
+        function selectImage(imageSection) {
+            // 取消之前选中的图片
+            if (selectedImage && selectedImage !== imageSection) {
+                selectedImage.classList.remove('selected');
+            }
+            selectedImage = imageSection;
+            imageSection.classList.add('selected');
+
+            // 显示控制按钮
+            const controls = imageSection.querySelector('.image-controls');
+            if (controls) controls.classList.add('visible');
+        }
+
+        // 取消选中
+        function deselectImage() {
+            if (selectedImage) {
+                selectedImage.classList.remove('selected');
+                const controls = selectedImage.querySelector('.image-controls');
+                if (controls) controls.classList.remove('visible');
+                selectedImage = null;
+            }
+        }
+
+        // 开始拖拽
+        function startDrag(e, imageSection) {
+            if (e.button !== 0) return; // 只响应左键
+
+            isDragging = true;
+            const rect = imageSection.getBoundingClientRect();
+            const resumeContentRect = document.getElementById('resume-content').getBoundingClientRect();
+
+            // 计算相对于图片左上角的偏移
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+
+            // 创建幽灵元素
+            dragGhost = imageSection.cloneNode(true);
+            dragGhost.className += ' drag-ghost';
+            dragGhost.style.width = rect.width + 'px';
+            dragGhost.style.height = rect.height + 'px';
+            dragGhost.style.left = e.clientX - dragOffset.x + 'px';
+            dragGhost.style.top = e.clientY - dragOffset.y + 'px';
+            document.body.appendChild(dragGhost);
+
+            // 原图片半透明
+            imageSection.classList.add('dragging');
+
+            // 绑定全局事件
+            document.addEventListener('pointermove', onDrag);
+            document.addEventListener('pointerup', endDrag);
+
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // 拖拽中
+        function onDrag(e) {
+            if (!isDragging || !dragGhost) return;
+
+            const resumeContent = document.getElementById('resume-content');
+            const resumeRect = resumeContent.getBoundingClientRect();
+
+            // 更新幽灵位置
+            let newX = e.clientX - dragOffset.x;
+            let newY = e.clientY - dragOffset.y;
+
+            // 边界限制
+            const minX = resumeRect.left;
+            const maxX = resumeRect.right - dragGhost.offsetWidth;
+            const minY = resumeRect.top;
+            const maxY = resumeRect.bottom - dragGhost.offsetHeight;
+
+            newX = Math.max(minX, Math.min(newX, maxX));
+            newY = Math.max(minY, Math.min(newY, maxY));
+
+            dragGhost.style.left = newX + 'px';
+            dragGhost.style.top = newY + 'px';
+
+            // 检测吸附
+            checkSnap(newX + resumeContent.scrollLeft, newY + resumeContent.scrollTop, dragGhost.offsetWidth, dragGhost.offsetHeight);
+        }
+
+        // 结束拖拽
+        function endDrag(e) {
+            if (!isDragging || !dragGhost) return;
+
+            const imageSection = document.querySelector('.resume-image-section.dragging');
+            if (imageSection) {
+                const resumeContent = document.getElementById('resume-content');
+                const resumeRect = resumeContent.getBoundingClientRect();
+
+                // 计算相对于 resume-content 的坐标
+                const finalX = (parseInt(dragGhost.style.left) - resumeRect.left) + resumeContent.scrollLeft;
+                const finalY = (parseInt(dragGhost.style.top) - resumeRect.top) + resumeContent.scrollTop;
+
+                imageSection.style.left = finalX + 'px';
+                imageSection.style.top = finalY + 'px';
+                imageSection.classList.remove('dragging');
+            }
+
+            // 清理
+            document.removeEventListener('pointermove', onDrag);
+            document.removeEventListener('pointerup', endDrag);
+
+            if (dragGhost) {
+                dragGhost.remove();
+                dragGhost = null;
+            }
+
+            // 清除吸附线
+            clearSnapLines();
+
+            isDragging = false;
+
+            // 保存图片位置到数据
+            saveImagePosition();
+        }
+
+        // 检测吸附
+        function checkSnap(x, y, width, height) {
+            clearSnapLines();
+            const resumeContent = document.getElementById('resume-content');
+            const resumeRect = resumeContent.getBoundingClientRect();
+            const snapThreshold = 8; // 8px 吸附阈值
+
+            const snapPositions = {
+                horizontal: [],
+                vertical: []
+            };
+
+            // 画布边界
+            snapPositions.vertical.push({ pos: 0, type: 'left' });
+            snapPositions.vertical.push({ pos: resumeContent.offsetWidth, type: 'right' });
+            snapPositions.vertical.push({ pos: resumeContent.offsetWidth / 2, type: 'center' });
+            snapPositions.horizontal.push({ pos: 0, type: 'top' });
+            snapPositions.horizontal.push({ pos: resumeContent.offsetHeight, type: 'bottom' });
+
+            // 其他图片/元素边界
+            const otherElements = resumeContent.querySelectorAll('.resume-image-section, .resume-section-title, .resume-flex-between');
+            otherElements.forEach(el => {
+                if (el === selectedImage) return;
+                const rect = el.getBoundingClientRect();
+                const relativeRect = {
+                    left: rect.left - resumeRect.left + resumeContent.scrollLeft,
+                    right: rect.right - resumeRect.left + resumeContent.scrollLeft,
+                    top: rect.top - resumeRect.top + resumeContent.scrollTop,
+                    bottom: rect.bottom - resumeRect.top + resumeContent.scrollTop
+                };
+                snapPositions.vertical.push({ pos: relativeRect.left, type: 'element-left' });
+                snapPositions.vertical.push({ pos: relativeRect.right, type: 'element-right' });
+                snapPositions.horizontal.push({ pos: relativeRect.top, type: 'element-top' });
+                snapPositions.horizontal.push({ pos: relativeRect.bottom, type: 'element-bottom' });
+            });
+
+            // 检测并吸附
+            const imageLeft = x;
+            const imageRight = x + width;
+            const imageTop = y;
+            const imageBottom = y + height;
+            const imageCenterX = x + width / 2;
+
+            // 垂直吸附线（水平对齐）
+            let snappedY = null;
+            for (const pos of snapPositions.horizontal) {
+                if (Math.abs(pos.pos - imageTop) < snapThreshold) {
+                    snappedY = pos.pos;
+                    showSnapLine('horizontal', pos.pos);
+                    break;
+                }
+                if (Math.abs(pos.pos - imageBottom) < snapThreshold) {
+                    snappedY = pos.pos;
+                    showSnapLine('horizontal', pos.pos);
+                    break;
+                }
+            }
+
+            // 水平吸附线（垂直对齐）
+            for (const pos of snapPositions.vertical) {
+                if (Math.abs(pos.pos - imageLeft) < snapThreshold) {
+                    showSnapLine('vertical', pos.pos);
+                    if (selectedImage) selectedImage.style.left = pos.pos + 'px';
+                    break;
+                }
+                if (Math.abs(pos.pos - imageRight) < snapThreshold) {
+                    showSnapLine('vertical', pos.pos);
+                    if (selectedImage) selectedImage.style.left = (pos.pos - width) + 'px';
+                    break;
+                }
+                if (Math.abs(pos.pos - imageCenterX) < snapThreshold) {
+                    showSnapLine('vertical', pos.pos);
+                    if (selectedImage) selectedImage.style.left = (pos.pos - width / 2) + 'px';
+                    break;
+                }
+            }
+
+            if (snappedY !== null && selectedImage) {
+                selectedImage.style.top = snappedY + 'px';
+            }
+        }
+
+        // 显示吸附线
+        function showSnapLine(orientation, position) {
+            const resumeContent = document.getElementById('resume-content');
+            const line = document.createElement('div');
+            line.className = `snap-guide ${orientation}`;
+            if (orientation === 'horizontal') {
+                line.style.top = position + 'px';
+                line.style.left = '0';
+            } else {
+                line.style.left = position + 'px';
+                line.style.top = '0';
+            }
+            resumeContent.appendChild(line);
+            snapLines.push(line);
+        }
+
+        // 清除吸附线
+        function clearSnapLines() {
+            snapLines.forEach(line => line.remove());
+            snapLines = [];
+        }
+
+        // 开始调整大小
+        function startResize(e, imageSection) {
+            if (e.button !== 0) return;
+
+            isResizing = true;
+            const handle = e.target.dataset.handle;
+            const rect = imageSection.getBoundingClientRect();
+            const startPos = { x: e.clientX, y: e.clientY };
+            const startWidth = rect.width;
+            const startHeight = rect.height;
+            const startLeft = parseInt(imageSection.style.left) || 0;
+            const startTop = parseInt(imageSection.style.top) || 0;
+            const img = imageSection.querySelector('img');
+            const naturalRatio = img.naturalWidth / img.naturalHeight || 1;
+
+            selectImage(imageSection);
+
+            function onPointerMove(ev) {
+                if (!isResizing) return;
+
+                const deltaX = ev.clientX - startPos.x;
+                const deltaY = ev.clientY - startPos.y;
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+                let newLeft = startLeft;
+                let newTop = startTop;
+
+                // 是否保持宽高比（默认保持，按 Shift 解锁）
+                const keepAspect = !e.shiftKey;
+
+                switch (handle) {
+                    case 'se': // 右下角
+                        newWidth = startWidth + deltaX;
+                        if (keepAspect) {
+                            newHeight = newWidth / naturalRatio;
+                        } else {
+                            newHeight = startHeight + deltaY;
+                        }
+                        break;
+                    case 'sw': // 左下角
+                        newWidth = startWidth - deltaX;
+                        newLeft = startLeft + deltaX;
+                        if (keepAspect) {
+                            newHeight = newWidth / naturalRatio;
+                        } else {
+                            newHeight = startHeight + deltaY;
+                        }
+                        break;
+                    case 'ne': // 右上角
+                        newHeight = startHeight - deltaY;
+                        if (keepAspect) {
+                            newWidth = newHeight * naturalRatio;
+                        } else {
+                            newWidth = startWidth + deltaX;
+                        }
+                        newTop = startTop + deltaY;
+                        break;
+                    case 'nw': // 左上角
+                        newWidth = startWidth - deltaX;
+                        newHeight = startHeight - deltaY;
+                        if (keepAspect) {
+                            if (newWidth / naturalRatio < newHeight) {
+                                newHeight = newWidth / naturalRatio;
+                            } else {
+                                newWidth = newHeight * naturalRatio;
+                            }
+                        }
+                        newLeft = startLeft + deltaX;
+                        newTop = startTop + deltaY;
+                        break;
+                    case 'e': // 右边
+                        newWidth = startWidth + deltaX;
+                        if (keepAspect) {
+                            newHeight = newWidth / naturalRatio;
+                        }
+                        break;
+                    case 'w': // 左边
+                        newWidth = startWidth - deltaX;
+                        newLeft = startLeft + deltaX;
+                        if (keepAspect) {
+                            newHeight = newWidth / naturalRatio;
+                        }
+                        break;
+                    case 's': // 下边
+                        newHeight = startHeight + deltaY;
+                        if (keepAspect) {
+                            newWidth = newHeight * naturalRatio;
+                        }
+                        break;
+                    case 'n': // 上边
+                        newHeight = startHeight - deltaY;
+                        newTop = startTop + deltaY;
+                        if (keepAspect) {
+                            newWidth = newHeight * naturalRatio;
+                        }
+                        break;
+                }
+
+                // 最小尺寸限制
+                const minSize = 50;
+                newWidth = Math.max(minSize, newWidth);
+                newHeight = Math.max(minSize, newHeight);
+
+                // 应用新尺寸
+                imageSection.style.width = newWidth + 'px';
+                imageSection.style.left = newLeft + 'px';
+                imageSection.style.top = newTop + 'px';
+            }
+
+            function onPointerUp() {
+                isResizing = false;
+                document.removeEventListener('pointermove', onPointerMove);
+                document.removeEventListener('pointerup', onPointerUp);
+
+                // 保存图片位置
+                saveImagePosition();
+            }
+
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
+
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // 保存图片位置到数据
+        function saveImagePosition() {
+            // TODO: 将图片位置信息保存到 resumeLibraryStore
+            console.log('[图片] 保存位置到数据...');
+        }
+
+        // 切换文字环绕
+        window.toggleImageFloat = function(btn) {
             const imageSection = btn.closest('.resume-image-section');
-            const sizeControl = imageSection.querySelector('.image-size-control');
-            const sizePreset = imageSection.querySelector('.image-size-preset');
-            sizeControl.classList.toggle('hidden');
-            sizePreset.classList.toggle('hidden');
+            imageSection.classList.toggle('float-left');
+            imageSection.classList.toggle('float-right');
         };
 
-        // 调整图片宽度
-        window.adjustImageWidth = function(slider) {
-            const value = slider.value;
-            const imageSection = slider.closest('.resume-image-section');
-            const img = imageSection.querySelector('img');
-            img.style.width = value + '%';
-            imageSection.querySelector('.image-size-value').textContent = value + '%';
-
-            // 更新预设按钮状态
-            const presetBtns = imageSection.querySelectorAll('.image-size-preset button');
-            presetBtns.forEach(btn => btn.classList.remove('active'));
-        };
-
-        // 设置图片预设尺寸
-        window.setImagePreset = function(btn, percent) {
-            const imageSection = btn.closest('.resume-image-section');
-            const img = imageSection.querySelector('img');
-            const slider = imageSection.querySelector('.image-size-control input[type="range"]');
-            const valueDisplay = imageSection.querySelector('.image-size-value');
-
-            img.style.width = percent + '%';
-            slider.value = percent;
-            valueDisplay.textContent = percent + '%';
-
-            // 更新按钮状态
-            const presetBtns = imageSection.querySelectorAll('.image-size-preset button');
-            presetBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        // 切换层级菜单
+        window.toggleImageLayerMenu = function(btn) {
+            // TODO: 显示层级菜单
+            console.log('[图片] 显示层级菜单...');
         };
 
         // 删除图片
@@ -8770,12 +9223,33 @@
 
             // 从 DOM 移除
             imageSection.remove();
+            selectedImage = null;
 
             // 更新图层树
             renderLayerTree();
 
             appendMessage('✅ 图片已删除', false);
         };
+
+        // 点击画布空白处取消选中
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.resume-image-section')) {
+                deselectImage();
+            }
+        });
+
+        // Delete 键删除选中图片
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (selectedImage && !isResizing) {
+                    const deleteBtn = selectedImage.querySelector('.image-control-btn.delete');
+                    if (deleteBtn) {
+                        e.preventDefault();
+                        deleteImage(deleteBtn);
+                    }
+                }
+            }
+        });
 
         // 首次使用引导
         function showOnboardingCard(key, title, description, actions, onDismiss) {
