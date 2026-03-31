@@ -2784,6 +2784,35 @@
         </button>
     </div>
 
+    <!-- 图片右键菜单 -->
+    <div id="image-context-menu" class="hidden fixed bg-white border border-slate-200 shadow-xl rounded-lg py-1.5 w-48 z-[10001]">
+        <button id="img-menu-front" class="w-full flex items-center gap-2 px-4 py-2 text-left text-[12px] text-slate-700 hover:bg-slate-50 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+            <span>置于顶层</span>
+        </button>
+        <button id="img-menu-up" class="w-full flex items-center gap-2 px-4 py-2 text-left text-[12px] text-slate-700 hover:bg-slate-50 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+            <span>上移一层</span>
+        </button>
+        <button id="img-menu-down" class="w-full flex items-center gap-2 px-4 py-2 text-left text-[12px] text-slate-700 hover:bg-slate-50 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            <span>下移一层</span>
+        </button>
+        <button id="img-menu-back" class="w-full flex items-center gap-2 px-4 py-2 text-left text-[12px] text-slate-700 hover:bg-slate-50 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            <span>置于底层</span>
+        </button>
+        <div class="h-px bg-slate-100 my-1"></div>
+        <button id="img-menu-copy" class="w-full flex items-center gap-2 px-4 py-2 text-left text-[12px] text-slate-700 hover:bg-slate-50 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>复制</span>
+        </button>
+        <button id="img-menu-delete" class="w-full flex items-center gap-2 px-4 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 transition-colors">
+            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            <span>删除</span>
+        </button>
+    </div>
+
     <div id="jd-panel" class="w-1/5 min-w-[240px] bg-white border-r border-slate-200 p-5 flex flex-col z-10 shadow-sm transition-all duration-300 flex-shrink-0">
         <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">JD 分析 & 素材</h2>
         <div class="bg-slate-50 rounded-xl p-4 text-[13px] text-slate-600 leading-relaxed mb-6 border border-slate-100 transition-opacity duration-200" id="jd-panel-container">
@@ -8829,6 +8858,11 @@
                 selectImage(imageSection);
             });
 
+            // 右键菜单
+            imageSection.addEventListener('contextmenu', (e) => {
+                showImageContextMenu(e, imageSection);
+            });
+
             // 开始拖拽（在图片主体上）
             const imgContainer = imageSection.querySelector('.resume-image-container');
             if (imgContainer) {
@@ -9205,9 +9239,138 @@
 
         // 切换层级菜单
         window.toggleImageLayerMenu = function(btn) {
-            // TODO: 显示层级菜单
-            console.log('[图片] 显示层级菜单...');
+            e.preventDefault();
         };
+
+        // 图片右键菜单
+        let imageContextMenuTarget = null;
+
+        function showImageContextMenu(e, imageSection) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            imageContextMenuTarget = imageSection;
+            const menu = document.getElementById('image-context-menu');
+
+            // 定位菜单（在鼠标位置右侧显示）
+            const menuWidth = 192; // w-48 = 12rem = 192px
+            const menuHeight = 210; // 估算
+            const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+            const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.classList.remove('hidden');
+
+            // 选中图片
+            selectImage(imageSection);
+        }
+
+        function hideImageContextMenu() {
+            const menu = document.getElementById('image-context-menu');
+            menu.classList.add('hidden');
+            imageContextMenuTarget = null;
+        }
+
+        // 绑定图片右键事件
+        function bindImageContextMenu() {
+            const resumeContent = document.getElementById('resume-content');
+            if (!resumeContent) return;
+
+            resumeContent.addEventListener('contextmenu', (e) => {
+                const imageSection = e.target.closest('.resume-image-section');
+                if (imageSection) {
+                    showImageContextMenu(e, imageSection);
+                } else {
+                    hideImageContextMenu();
+                }
+            });
+
+            // 点击关闭菜单
+            document.addEventListener('click', hideImageContextMenu);
+
+            // 菜单项事件绑定
+            document.getElementById('img-menu-front')?.addEventListener('click', () => {
+                if (imageContextMenuTarget) {
+                    const maxZ = getMaxZIndex();
+                    imageContextMenuTarget.style.zIndex = maxZ + 1;
+                    saveImagePosition();
+                    hideImageContextMenu();
+                }
+            });
+
+            document.getElementById('img-menu-up')?.addEventListener('click', () => {
+                if (imageContextMenuTarget) {
+                    const currentZ = parseInt(imageContextMenuTarget.style.zIndex) || 1;
+                    imageContextMenuTarget.style.zIndex = currentZ + 1;
+                    saveImagePosition();
+                    hideImageContextMenu();
+                }
+            });
+
+            document.getElementById('img-menu-down')?.addEventListener('click', () => {
+                if (imageContextMenuTarget) {
+                    const currentZ = parseInt(imageContextMenuTarget.style.zIndex) || 1;
+                    imageContextMenuTarget.style.zIndex = Math.max(1, currentZ - 1);
+                    saveImagePosition();
+                    hideImageContextMenu();
+                }
+            });
+
+            document.getElementById('img-menu-back')?.addEventListener('click', () => {
+                if (imageContextMenuTarget) {
+                    imageContextMenuTarget.style.zIndex = 1;
+                    saveImagePosition();
+                    hideImageContextMenu();
+                }
+            });
+
+            document.getElementById('img-menu-copy')?.addEventListener('click', () => {
+                if (imageContextMenuTarget) {
+                    copyImage(imageContextMenuTarget);
+                    hideImageContextMenu();
+                }
+            });
+
+            document.getElementById('img-menu-delete')?.addEventListener('click', () => {
+                if (imageContextMenuTarget) {
+                    const deleteBtn = imageContextMenuTarget.querySelector('.image-control-btn.delete');
+                    if (deleteBtn) deleteImage(deleteBtn);
+                    hideImageContextMenu();
+                }
+            });
+        }
+
+        // 获取最大 z-index
+        function getMaxZIndex() {
+            const images = document.querySelectorAll('.resume-image-section');
+            let maxZ = 1;
+            images.forEach(img => {
+                const z = parseInt(img.style.zIndex) || 1;
+                if (z > maxZ) maxZ = z;
+            });
+            return maxZ;
+        }
+
+        // 复制图片
+        function copyImage(sourceImage) {
+            const imageId = 'img-' + Date.now();
+            const src = sourceImage.querySelector('img')?.src;
+            const caption = sourceImage.querySelector('.image-caption')?.textContent || '';
+            const x = (parseInt(sourceImage.style.left) || 0) + 20;
+            const y = (parseInt(sourceImage.style.top) || 0) + 20;
+            const width = parseInt(sourceImage.style.width) || 200;
+            const zIndex = getMaxZIndex() + 1;
+
+            if (src) {
+                addImageToResume(imageId, src, caption, x, y, width, zIndex);
+                saveImagePosition();
+                appendMessage('✅ 图片已复制', false);
+            }
+        }
+
+        // 初始化图片右键菜单
+        bindImageContextMenu();
 
         // 删除图片
         window.deleteImage = async function(btn) {
