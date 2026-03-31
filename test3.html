@@ -468,7 +468,8 @@
                 0 2px 6px rgba(0,0,0,0.06),
                 0 12px 32px rgba(0,0,0,0.12),
                 0 0 0 1px rgba(0,0,0,0.08);
-            padding: 50px 60px; position: relative; transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top center;
+            padding: 50px 60px; position: relative; transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: top center !important;
             animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
         }
         .a4-paper:hover {
@@ -3778,13 +3779,8 @@
         function updateScale() {
             const container = document.getElementById('canvas-container');
             const paper = document.getElementById('resume-paper');
-            console.log('[updateScale] container:', container ? '存在' : '不存在', 'paper:', paper ? '存在' : '不存在');
-            console.log('[updateScale] isStyleEditMode:', isStyleEditMode, 'isPreviewMode:', isPreviewMode, 'isManualZoom:', isManualZoom, 'currentZoom:', currentZoom);
 
-            if (!container || !paper) {
-                console.error('[updateScale] container 或 paper 不存在');
-                return;
-            }
+            if (!container || !paper) return;
 
             // 在预览模式或样式编辑模式下启用缩放
             if (isPreviewMode || isStyleEditMode) {
@@ -3792,7 +3788,6 @@
                 if (isStyleEditMode && !isManualZoom) {
                     // 样式编辑模式且未手动缩放：自适应缩放至刚好看到全貌
                     scale = Math.min((container.clientWidth - 40) / 820, (container.clientHeight - 80) / 1160, 1);
-                    console.log('[updateScale] 自动缩放 scale:', scale);
                     // 更新滑块位置
                     const zoomSlider = document.getElementById('zoom-slider');
                     const zoomValue = document.getElementById('zoom-value');
@@ -3804,16 +3799,13 @@
                 } else {
                     // 手动缩放模式或预览模式
                     scale = currentZoom / 100;
-                    console.log('[updateScale] 手动缩放 scale:', scale);
                 }
-                // 应用缩放 - 使用 transform-origin: top center
-                paper.style.transformOrigin = 'top center';
-                paper.style.transform = `scale(${scale})`;
-                // 计算下方留白，确保缩放后布局正确
+                // 应用缩放 - 使用 !important 强制应用
+                paper.style.setProperty('transform', `scale(${scale})`, 'important');
+                // 计算下方留白
                 paper.style.marginBottom = `${1160 * scale}px`;
-                console.log('[updateScale] 已应用 transform:', paper.style.transform, 'marginBottom:', paper.style.marginBottom);
             } else {
-                paper.style.transform = 'scale(1)';
+                paper.style.removeProperty('transform');
                 paper.style.marginBottom = '0';
             }
         }
