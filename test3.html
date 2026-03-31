@@ -2522,7 +2522,8 @@
                 </svg>
                 <input type="range" id="zoom-slider" min="50" max="120" value="100"
                      style="width: 100px; accent-color: #a855f7;"
-                     title="缩放比例">
+                     title="缩放比例"
+                     oninput="handleZoomChange(this.value)">
                 <span id="zoom-value" style="font-size: 12px; color: #64748b; min-width: 35px;">100%</span>
             </div>
         </div>
@@ -3812,18 +3813,20 @@
 
         // 初始化缩放滑块事件（在 DOM 加载后由 initStyleEditMode 调用）
         function initZoomSlider() {
-            const zoomSlider = document.getElementById('zoom-slider');
+            console.log('[Zoom] initZoomSlider 被调用');
+            // 使用 oninput 属性绑定，不需要额外代码
+        }
+
+        // 处理缩放变化（全局函数，被 HTML oninput 调用）
+        function handleZoomChange(value) {
+            currentZoom = parseInt(value);
             const zoomValue = document.getElementById('zoom-value');
-            console.log('[Zoom] 初始化缩放滑块:', zoomSlider ? '找到' : '未找到', zoomValue ? '找到' : '未找到');
-            if (zoomSlider && zoomValue) {
-                zoomSlider.addEventListener('input', (e) => {
-                    currentZoom = parseInt(e.target.value);
-                    zoomValue.textContent = currentZoom + '%';
-                    isManualZoom = true; // 标记为手动缩放
-                    console.log('[Zoom] 手动缩放:', currentZoom + '%');
-                    updateScale();
-                });
+            if (zoomValue) {
+                zoomValue.textContent = currentZoom + '%';
             }
+            isManualZoom = true; // 标记为手动缩放
+            console.log('[Zoom] 手动缩放:', currentZoom + '%');
+            updateScale();
         }
 
         // 注意："定稿预览"按钮事件已移至 initStyleEditMode 函数中
