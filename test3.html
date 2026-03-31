@@ -8912,7 +8912,9 @@
 
             isDragging = true;
             const rect = imageSection.getBoundingClientRect();
-            const resumeContentRect = document.getElementById('resume-content').getBoundingClientRect();
+            // 使用 A4 纸张作为参考坐标系，而不是 resume-content
+            const resumePaper = document.getElementById('resume-paper');
+            const paperRect = resumePaper.getBoundingClientRect();
 
             // 计算相对于图片左上角的偏移
             dragOffset.x = e.clientX - rect.left;
@@ -8942,27 +8944,18 @@
         function onDrag(e) {
             if (!isDragging || !dragGhost) return;
 
-            const resumeContent = document.getElementById('resume-content');
-            const resumeRect = resumeContent.getBoundingClientRect();
+            const resumePaper = document.getElementById('resume-paper');
+            const paperRect = resumePaper.getBoundingClientRect();
 
-            // 更新幽灵位置（不限制边界，允许拖出画布）
+            // 更新幽灵位置（完全自由，无边界限制）
             let newX = e.clientX - dragOffset.x;
             let newY = e.clientY - dragOffset.y;
-
-            // 宽松边界限制（允许部分超出画布）
-            const minX = resumeRect.left - dragGhost.offsetWidth / 2;
-            const maxX = resumeRect.right - dragGhost.offsetWidth / 2;
-            const minY = resumeRect.top - dragGhost.offsetHeight / 2;
-            const maxY = resumeRect.bottom - dragGhost.offsetHeight / 2;
-
-            newX = Math.max(minX, Math.min(newX, maxX));
-            newY = Math.max(minY, Math.min(newY, maxY));
 
             dragGhost.style.left = newX + 'px';
             dragGhost.style.top = newY + 'px';
 
             // 检测吸附（仅视觉预览，不实际移动）
-            checkSnapPreview(newX + resumeContent.scrollLeft, newY + resumeContent.scrollTop, dragGhost.offsetWidth, dragGhost.offsetHeight);
+            checkSnapPreview(newX - paperRect.left + resumePaper.scrollLeft, newY - paperRect.top + resumePaper.scrollTop, dragGhost.offsetWidth, dragGhost.offsetHeight);
         }
 
         // 结束拖拽
@@ -8971,12 +8964,12 @@
 
             const imageSection = document.querySelector('.resume-image-section.dragging');
             if (imageSection) {
-                const resumeContent = document.getElementById('resume-content');
-                const resumeRect = resumeContent.getBoundingClientRect();
+                const resumePaper = document.getElementById('resume-paper');
+                const paperRect = resumePaper.getBoundingClientRect();
 
-                // 计算相对于 resume-content 的坐标
-                let finalX = (parseInt(dragGhost.style.left) - resumeRect.left) + resumeContent.scrollLeft;
-                let finalY = (parseInt(dragGhost.style.top) - resumeRect.top) + resumeContent.scrollTop;
+                // 计算相对于 resume-paper 的坐标
+                let finalX = parseInt(dragGhost.style.left) - paperRect.left + resumePaper.scrollLeft;
+                let finalY = parseInt(dragGhost.style.top) - paperRect.top + resumePaper.scrollTop;
 
                 // 结束时检测吸附（按 Alt 键跳过吸附）
                 if (!e.altKey) {
@@ -9010,31 +9003,31 @@
 
         // 获取吸附位置（不直接修改，只返回建议位置）
         function getSnapPosition(x, y, width, height) {
-            const resumeContent = document.getElementById('resume-content');
-            const resumeRect = resumeContent.getBoundingClientRect();
-            const snapThreshold = 10; // 增加到 10px，更明显的吸附
+            const resumePaper = document.getElementById('resume-paper');
+            const paperRect = resumePaper.getBoundingClientRect();
+            const snapThreshold = 10; // 10px 吸附阈值
 
             const result = { x: null, y: null };
 
-            // 画布边界
+            // 画布边界（使用 A4 纸张的尺寸）
             const boundaries = [
                 { type: 'v', pos: 0 }, // 左边界
-                { type: 'v', pos: resumeContent.offsetWidth }, // 右边界
-                { type: 'v', pos: resumeContent.offsetWidth / 2 }, // 中心
+                { type: 'v', pos: resumePaper.offsetWidth }, // 右边界
+                { type: 'v', pos: resumePaper.offsetWidth / 2 }, // 中心
                 { type: 'h', pos: 0 }, // 上边界
-                { type: 'h', pos: resumeContent.offsetHeight } // 下边界
+                { type: 'h', pos: resumePaper.offsetHeight } // 下边界
             ];
 
             // 其他元素边界
-            const otherElements = resumeContent.querySelectorAll('.resume-image-section, .resume-section-title, .resume-flex-between');
+            const otherElements = resumePaper.querySelectorAll('.resume-image-section, .resume-section-title, .resume-flex-between');
             otherElements.forEach(el => {
                 if (el === selectedImage) return;
                 const rect = el.getBoundingClientRect();
                 const relativeRect = {
-                    left: rect.left - resumeRect.left + resumeContent.scrollLeft,
-                    right: rect.right - resumeRect.left + resumeContent.scrollLeft,
-                    top: rect.top - resumeRect.top + resumeContent.scrollTop,
-                    bottom: rect.bottom - resumeRect.top + resumeContent.scrollTop
+                    left: rect.left - paperRect.left + resumePaper.scrollLeft,
+                    right: rect.right - paperRect.left + resumePaper.scrollLeft,
+                    top: rect.top - paperRect.top + resumePaper.scrollTop,
+                    bottom: rect.bottom - paperRect.top + resumePaper.scrollTop
                 };
                 boundaries.push(
                     { type: 'v', pos: relativeRect.left },
@@ -9092,8 +9085,8 @@
         function checkSnapPreview(x, y, width, height) {
             clearSnapLines();
             // 只显示指示线，不实际移动
-            const resumeContent = document.getElementById('resume-content');
-            const resumeRect = resumeContent.getBoundingClientRect();
+            const resumePaper = document.getElementById('resume-paper');
+            const paperRect = resumePaper.getBoundingClientRect();
             const snapThreshold = 10;
 
             const imageLeft = x;
@@ -9105,22 +9098,22 @@
             // 画布边界
             const boundaries = [
                 { type: 'v', pos: 0 },
-                { type: 'v', pos: resumeContent.offsetWidth },
-                { type: 'v', pos: resumeContent.offsetWidth / 2 },
+                { type: 'v', pos: resumePaper.offsetWidth },
+                { type: 'v', pos: resumePaper.offsetWidth / 2 },
                 { type: 'h', pos: 0 },
-                { type: 'h', pos: resumeContent.offsetHeight }
+                { type: 'h', pos: resumePaper.offsetHeight }
             ];
 
             // 其他元素
-            const otherElements = resumeContent.querySelectorAll('.resume-image-section, .resume-section-title, .resume-flex-between');
+            const otherElements = resumePaper.querySelectorAll('.resume-image-section, .resume-section-title, .resume-flex-between');
             otherElements.forEach(el => {
                 if (el === selectedImage) return;
                 const rect = el.getBoundingClientRect();
                 const relativeRect = {
-                    left: rect.left - resumeRect.left + resumeContent.scrollLeft,
-                    right: rect.right - resumeRect.left + resumeContent.scrollLeft,
-                    top: rect.top - resumeRect.top + resumeContent.scrollTop,
-                    bottom: rect.bottom - resumeRect.top + resumeContent.scrollTop
+                    left: rect.left - paperRect.left + resumePaper.scrollLeft,
+                    right: rect.right - paperRect.left + resumePaper.scrollLeft,
+                    top: rect.top - paperRect.top + resumePaper.scrollTop,
+                    bottom: rect.bottom - paperRect.top + resumePaper.scrollTop
                 };
                 boundaries.push(
                     { type: 'v', pos: relativeRect.left },
