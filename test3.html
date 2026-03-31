@@ -3806,8 +3806,11 @@
                     scale = currentZoom / 100;
                     console.log('[updateScale] 手动缩放 scale:', scale);
                 }
+                // 应用缩放 - 使用 transform-origin: top center
+                paper.style.transformOrigin = 'top center';
                 paper.style.transform = `scale(${scale})`;
-                paper.style.marginBottom = `-${1160 * (1 - scale)}px`;
+                // 计算下方留白，确保缩放后布局正确
+                paper.style.marginBottom = `${1160 * scale}px`;
                 console.log('[updateScale] 已应用 transform:', paper.style.transform, 'marginBottom:', paper.style.marginBottom);
             } else {
                 paper.style.transform = 'scale(1)';
@@ -7122,8 +7125,11 @@
             // 滚动到顶部
             document.getElementById('canvas-container').scrollTop = 0;
 
-            // 更新缩放（让 A4 纸完整显示）
-            setTimeout(() => updateScale(), 100);
+            // 更新缩放 - 等待 DOM 更新后执行
+            setTimeout(() => {
+                console.log('[enterStyleEditMode] 开始自动缩放');
+                updateScale();
+            }, 50);
 
             console.log('[完成] 样式编辑模式已进入');
         }
